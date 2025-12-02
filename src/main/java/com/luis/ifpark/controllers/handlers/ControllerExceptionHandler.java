@@ -3,8 +3,8 @@ package com.luis.ifpark.controllers.handlers;
 
 import com.luis.ifpark.dtos.CustomError;
 import com.luis.ifpark.dtos.ValidationError;
-import com.luis.ifpark.services.exceptions.DatabaseException;
-import com.luis.ifpark.services.exceptions.ResourceNotFoundException;
+import com.luis.ifpark.exceptions.DatabaseException;
+import com.luis.ifpark.exceptions.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

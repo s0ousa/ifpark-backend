@@ -1,4 +1,4 @@
-package com.luis.ifpark.services.exceptions;
+package com.luis.ifpark.exceptions;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

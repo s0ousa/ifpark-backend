@@ -3,8 +3,8 @@ package com.luis.ifpark.services;
 import com.luis.ifpark.dtos.ProductDTO;
 import com.luis.ifpark.entities.Product;
 import com.luis.ifpark.repositories.ProductRepository;
-import com.luis.ifpark.services.exceptions.DatabaseException;
-import com.luis.ifpark.services.exceptions.ResourceNotFoundException;
+import com.luis.ifpark.exceptions.DatabaseException;
+import com.luis.ifpark.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -13,9 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProductService {
