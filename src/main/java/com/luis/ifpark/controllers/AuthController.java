@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -54,8 +55,9 @@ public class AuthController {
             @RequestParam String cpf,
             @RequestParam String email,
             @RequestParam String senha,
-            @RequestParam PapelUsuario papel) {
-        UsuarioResponseDTO createdDto = authService.createUsuarioForExistingPessoa(cpf, email, senha, papel);
+            @RequestParam PapelUsuario papel,
+            @RequestParam(required = false) java.util.UUID campusId) {
+        UsuarioResponseDTO createdDto = authService.createUsuarioForExistingPessoa(cpf, email, senha, papel, campusId);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(createdDto.getId())
@@ -66,13 +68,14 @@ public class AuthController {
     @PostMapping(value = "/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
         // Autenticar o usuário
+        System.out.println(loginDTO.getEmail() + loginDTO.getSenha());
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getSenha())
         );
 
         // Carregar detalhes do usuário
         UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getEmail());
-
+        System.out.println(userDetails);
         // Gerar token JWT
         String token = jwtUtil.generateToken(userDetails);
 

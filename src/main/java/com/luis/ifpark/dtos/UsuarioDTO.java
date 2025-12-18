@@ -1,5 +1,6 @@
 package com.luis.ifpark.dtos;
 
+import com.luis.ifpark.dtos.pessoa.PessoaUpdateDTO;
 import com.luis.ifpark.entities.Usuario;
 import com.luis.ifpark.entities.enums.PapelUsuario;
 import jakarta.validation.constraints.Email;
@@ -31,13 +32,13 @@ public class UsuarioDTO {
     private PapelUsuario papel;
 
     @NotNull(message = "Pessoa é obrigatória")
-    private PessoaDTO pessoa;
+    private PessoaUpdateDTO.PessoaDTO pessoa;
 
     public UsuarioDTO(Usuario entity) {
         this.id = entity.getId();
         this.email = entity.getEmail();
         this.senha = entity.getSenha();
         this.papel = entity.getPapel();
-        this.pessoa = entity.getPessoa() != null ? new PessoaDTO(entity.getPessoa()) : null;
+        this.pessoa = entity.getPessoa() != null ? new PessoaUpdateDTO.PessoaDTO(entity.getPessoa()) : null;
     }
 }

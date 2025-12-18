@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -35,6 +36,7 @@ public class CampusController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<CampusDTO> insert(@Valid @RequestBody CampusCreateDTO dto) {
         CampusDTO campusDTO = service.insert(dto);
         URI uri = ServletUriComponentsBuilder
@@ -46,12 +48,14 @@ public class CampusController {
     }
 
     @PutMapping(value = "/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<CampusDTO> update(@PathVariable UUID id, @Valid @RequestBody CampusUpdateDTO dto) {
         CampusDTO result = service.update(id, dto);
         return ResponseEntity.ok(result);
     }
 
     @DeleteMapping(value = "/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();

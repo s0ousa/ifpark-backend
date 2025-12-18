@@ -2,6 +2,8 @@ package com.luis.ifpark.services;
 
 import com.luis.ifpark.dtos.auth.RegistroCompletoDTO;
 import com.luis.ifpark.dtos.usuario.UsuarioResponseDTO;
+import com.luis.ifpark.entities.Campus;
+import com.luis.ifpark.entities.Endereco;
 import com.luis.ifpark.entities.Pessoa;
 import com.luis.ifpark.entities.Usuario;
 import com.luis.ifpark.entities.enums.PapelUsuario;
@@ -10,12 +12,16 @@ import com.luis.ifpark.entities.enums.TipoPessoa;
 import com.luis.ifpark.exceptions.CpfJaCadastradoException;
 import com.luis.ifpark.exceptions.EmailJaCadastradoException;
 import com.luis.ifpark.exceptions.ResourceNotFoundException;
+import com.luis.ifpark.repositories.CampusRepository;
+import com.luis.ifpark.repositories.EnderecoRepository;
 import com.luis.ifpark.repositories.PessoaRepository;
 import com.luis.ifpark.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -25,48 +31,63 @@ public class AuthService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+    
+    @Autowired
+    private CampusRepository campusRepository;
+
+    @Autowired
+    private EnderecoRepository enderecoRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Transactional
     public UsuarioResponseDTO register(RegistroCompletoDTO dto) {
-        // Verificar se CPF já existe
+
         if (pessoaRepository.existsByCpf(dto.getCpf())) {
             throw new CpfJaCadastradoException("CPF já cadastrado: " + dto.getCpf());
         }
 
-        // Verificar se email já existe
+
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new EmailJaCadastradoException("Email já cadastrado: " + dto.getEmail());
         }
 
-        // Validar matrícula para alunos
+
         if (dto.getTipo() == TipoPessoa.ALUNO && (dto.getMatricula() == null || dto.getMatricula().isEmpty())) {
             throw new IllegalArgumentException("Matrícula é obrigatória para alunos");
         }
 
-        // Criar a Pessoa
+
+        // Criar endereço
+        Endereco endereco = new Endereco();
+        endereco.setLogradouro(dto.getLogradouro());
+        endereco.setNumero(dto.getNumero());
+        endereco.setComplemento(dto.getComplemento());
+        endereco.setBairro(dto.getBairro());
+        endereco.setCidade(dto.getCidade());
+        endereco.setEstado(dto.getEstado());
+        endereco.setCep(dto.getCep());
+        Endereco savedEndereco = enderecoRepository.save(endereco);
+
         Pessoa pessoa = new Pessoa();
         pessoa.setNome(dto.getNome());
         pessoa.setCpf(dto.getCpf());
         pessoa.setMatricula(dto.getMatricula());
         pessoa.setTipo(dto.getTipo());
-        pessoa.setStatus(StatusPessoa.ATIVO); // Pessoas criadas via registro começam ativas
+        pessoa.setStatus(StatusPessoa.PENDENTE);
         pessoa.setTelefone(dto.getTelefone());
+        pessoa.setEndereco(savedEndereco);
 
         Pessoa savedPessoa = pessoaRepository.save(pessoa);
 
-        // Criar o Usuario
         Usuario usuario = new Usuario();
         usuario.setEmail(dto.getEmail());
-        usuario.setSenha(passwordEncoder.encode(dto.getSenha())); // Codificar a senha
-        usuario.setPapel(PapelUsuario.ROLE_COMUM); // Por padrão, usuários comuns
+        usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
+        usuario.setPapel(PapelUsuario.ROLE_COMUM);
         usuario.setPessoa(savedPessoa);
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
-
-        // Atualizar a pessoa com a referência ao usuário
         savedPessoa.setUsuario(savedUsuario);
         pessoaRepository.save(savedPessoa);
 
@@ -74,7 +95,7 @@ public class AuthService {
     }
 
     @Transactional
-    public UsuarioResponseDTO createUsuarioForExistingPessoa(String cpf, String email, String senha, PapelUsuario papel) {
+    public UsuarioResponseDTO createUsuarioForExistingPessoa(String cpf, String email, String senha, PapelUsuario papel, UUID campusId) {
         // Verificar se email já existe
         if (usuarioRepository.existsByEmail(email)) {
             throw new EmailJaCadastradoException("Email já cadastrado: " + email);
@@ -95,6 +116,13 @@ public class AuthService {
         usuario.setSenha(passwordEncoder.encode(senha)); // Codificar a senha
         usuario.setPapel(papel);
         usuario.setPessoa(pessoa);
+        
+        // Associar campus se fornecido
+        if (campusId != null) {
+            Campus campus = campusRepository.findById(campusId)
+                .orElseThrow(() -> new ResourceNotFoundException("Campus não encontrado com ID: " + campusId));
+            usuario.setCampus(campus);
+        }
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
 
@@ -103,6 +131,12 @@ public class AuthService {
         pessoaRepository.save(pessoa);
 
         return toResponseDTO(savedUsuario);
+    }
+    
+    // Método sobrecarregado para manter compatibilidade
+    @Transactional
+    public UsuarioResponseDTO createUsuarioForExistingPessoa(String cpf, String email, String senha, PapelUsuario papel) {
+        return createUsuarioForExistingPessoa(cpf, email, senha, papel, null);
     }
 
     private UsuarioResponseDTO toResponseDTO(Usuario usuario) {
@@ -121,6 +155,15 @@ public class AuthService {
                 usuario.getPessoa().getTipo(),
                 usuario.getPessoa().getStatus(),
                 usuario.getPessoa().getTelefone()
+            ));
+        }
+        
+        if (usuario.getCampus() != null) {
+            // Criar um DTO de campus simplificado
+            dto.setCampus(new com.luis.ifpark.dtos.campus.CampusDTO(
+                usuario.getCampus().getId(),
+                usuario.getCampus().getNome(),
+                null // Endereço será carregado se necessário
             ));
         }
         

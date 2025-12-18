@@ -2,6 +2,7 @@ package com.luis.ifpark.dtos.usuario;
 
 import com.luis.ifpark.entities.enums.PapelUsuario;
 import com.luis.ifpark.dtos.pessoa.PessoaResponseDTO;
+import com.luis.ifpark.dtos.campus.CampusDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,4 +19,5 @@ public class UsuarioResponseDTO {
     private String email;
     private PapelUsuario papel;
     private PessoaResponseDTO pessoa;
+    private CampusDTO campus;
 }

@@ -31,4 +31,6 @@ public class UsuarioCreateDTO {
 
     @NotNull(message = "ID da Pessoa é obrigatório")
     private UUID pessoaId;
+    
+    private UUID campusId;
 }

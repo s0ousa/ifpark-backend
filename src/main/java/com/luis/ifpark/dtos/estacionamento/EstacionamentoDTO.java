@@ -1,4 +1,4 @@
-package com.luis.ifpark.dtos;
+package com.luis.ifpark.dtos.estacionamento;
 
 import com.luis.ifpark.dtos.campus.CampusDTO;
 import com.luis.ifpark.entities.Estacionamento;

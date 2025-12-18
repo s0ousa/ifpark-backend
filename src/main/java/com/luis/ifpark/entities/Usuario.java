@@ -38,6 +38,10 @@ public class Usuario implements UserDetails {
     @JoinColumn(name = "pessoa_id", nullable = false)
     private Pessoa pessoa;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campus_id")
+    private Campus campus;
+
     public Usuario() {
     }
 
@@ -47,6 +51,15 @@ public class Usuario implements UserDetails {
         this.senha = senha;
         this.papel = papel;
         this.pessoa = pessoa;
+    }
+
+    public Usuario(UUID id, String email, String senha, PapelUsuario papel, Pessoa pessoa, Campus campus) {
+        this.id = id;
+        this.email = email;
+        this.senha = senha;
+        this.papel = papel;
+        this.pessoa = pessoa;
+        this.campus = campus;
     }
 
     @Override

@@ -1,6 +1,6 @@
 package com.luis.ifpark.services;
 
-import com.luis.ifpark.dtos.EstacionamentoDTO;
+import com.luis.ifpark.dtos.estacionamento.EstacionamentoDTO;
 import com.luis.ifpark.dtos.estacionamento.EstacionamentoCreateDTO;
 import com.luis.ifpark.dtos.estacionamento.EstacionamentoUpdateDTO;
 import com.luis.ifpark.entities.Campus;
@@ -9,6 +9,7 @@ import com.luis.ifpark.exceptions.DatabaseException;
 import com.luis.ifpark.exceptions.ResourceNotFoundException;
 import com.luis.ifpark.repositories.CampusRepository;
 import com.luis.ifpark.repositories.EstacionamentoRepository;
+import com.luis.ifpark.utils.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -45,6 +46,13 @@ public class EstacionamentoService {
 
     @Transactional
     public EstacionamentoDTO insert(EstacionamentoCreateDTO dto) {
+        // Verificar se o usuário tem acesso ao campus onde está criando o estacionamento
+        if (dto.getCampus() != null && dto.getCampus().getId() != null) {
+            if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.hasAccessToCampus(dto.getCampus().getId())) {
+                throw new SecurityException("Você não tem permissão para criar estacionamentos neste campus");
+            }
+        }
+        
         Estacionamento entity = new Estacionamento();
         copyCreateDtoToEntity(dto, entity);
         entity = repository.save(entity);
@@ -53,6 +61,16 @@ public class EstacionamentoService {
 
     @Transactional
     public EstacionamentoDTO update(UUID id, EstacionamentoUpdateDTO dto) {
+        Estacionamento estacionamento = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Estacionamento não encontrado"));
+        
+        // Verificar se o usuário tem acesso ao campus do estacionamento
+        if (estacionamento.getCampus() != null) {
+            if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.hasAccessToCampus(estacionamento.getCampus().getId())) {
+                throw new SecurityException("Você não tem permissão para modificar este estacionamento");
+            }
+        }
+        
         try {
             Estacionamento entity = repository.getReferenceById(id);
             copyUpdateDtoToEntity(dto, entity);
@@ -65,6 +83,16 @@ public class EstacionamentoService {
 
     @Transactional(propagation = Propagation.SUPPORTS)
     public void deleteById(UUID id) {
+        Estacionamento estacionamento = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Estacionamento não encontrado"));
+        
+        // Verificar se o usuário tem acesso ao campus do estacionamento
+        if (estacionamento.getCampus() != null) {
+            if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.hasAccessToCampus(estacionamento.getCampus().getId())) {
+                throw new SecurityException("Você não tem permissão para deletar este estacionamento");
+            }
+        }
+        
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Recurso não encontrado");
         }

@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,4 +28,6 @@ public class UsuarioUpdateDTO {
 
     @NotNull(message = "Papel é obrigatório")
     private PapelUsuario papel;
+    
+    private UUID campusId;
 }

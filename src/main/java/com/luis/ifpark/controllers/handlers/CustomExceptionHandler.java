@@ -9,6 +9,8 @@ import com.luis.ifpark.exceptions.DatabaseException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -59,5 +61,23 @@ public class CustomExceptionHandler {
         return ResponseEntity.status(status).body(err);
     }
 
+    @ExceptionHandler({AuthenticationException.class, AccessDeniedException.class})
+    public ResponseEntity<CustomError> securityException(Exception e, HttpServletRequest request) {
+        HttpStatus status = (e instanceof AuthenticationException) ? 
+            HttpStatus.UNAUTHORIZED : HttpStatus.FORBIDDEN;
+            
+        String errorMessage = (e instanceof AuthenticationException) ?
+            "Acesso não autorizado. Token não fornecido ou inválido." :
+            "Acesso negado. Você não tem permissão para acessar este recurso.";
+            
+        CustomError err = new CustomError(
+            Instant.now(), 
+            status.value(), 
+            errorMessage, 
+            request.getRequestURI()
+        );
+        
+        return ResponseEntity.status(status).body(err);
+    }
 
 }
