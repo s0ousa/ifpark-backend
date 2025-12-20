@@ -1,6 +1,7 @@
 package com.luis.ifpark.dtos.estacionamento;
 
 import com.luis.ifpark.dtos.campus.CampusDTO;
+import com.luis.ifpark.dtos.campus.CampusResumoDTO;
 import com.luis.ifpark.entities.Estacionamento;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -27,12 +28,12 @@ public class EstacionamentoDTO {
     private Integer capacidadeTotal;
 
     @NotNull(message = "Campus é obrigatório")
-    private CampusDTO campus;
+    private CampusResumoDTO campus;
 
     public EstacionamentoDTO(Estacionamento entity) {
         this.id = entity.getId();
         this.nome = entity.getNome();
         this.capacidadeTotal = entity.getCapacidadeTotal();
-        this.campus = entity.getCampus() != null ? new CampusDTO(entity.getCampus()) : null;
+        this.campus = entity.getCampus() != null ? new CampusResumoDTO(entity.getCampus()) : null;
     }
 }

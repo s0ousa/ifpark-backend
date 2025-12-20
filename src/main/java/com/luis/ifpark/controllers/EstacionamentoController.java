@@ -32,7 +32,8 @@ public class EstacionamentoController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN')")
-    public ResponseEntity<Page<EstacionamentoDTO>> findAll(Pageable pageable) {
+    public ResponseEntity<Page<EstacionamentoDTO>> findAll(@RequestParam(required = false) UUID campusId,
+                                                           Pageable pageable) {
         Page<EstacionamentoDTO> dtoPage = service.findAll(pageable);
         return ResponseEntity.ok(dtoPage);
     }
