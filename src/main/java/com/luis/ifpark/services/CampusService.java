@@ -96,47 +96,52 @@ public class CampusService {
 
     private void copyCreateDtoToEntity(CampusCreateDTO dto, Campus entity) {
         entity.setNome(dto.getNome());
-        
-        if (dto.getEndereco() != null) {
-            // Verifica se o endereço já existe ou cria um novo
-            if (dto.getEndereco().getId() != null) {
-                Endereco endereco = enderecoRepository.findById(dto.getEndereco().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Endereço não encontrado"));
-                entity.setEndereco(endereco);
-            } else {
-                Endereco endereco = new Endereco();
-                endereco.setLogradouro(dto.getEndereco().getLogradouro());
-                endereco.setNumero(dto.getEndereco().getNumero());
-                endereco.setBairro(dto.getEndereco().getBairro());
-                endereco.setCidade(dto.getEndereco().getCidade());
-                endereco.setEstado(dto.getEndereco().getEstado());
-                endereco.setCep(dto.getEndereco().getCep());
-                endereco.setComplemento(dto.getEndereco().getComplemento());
-                entity.setEndereco(endereco);
-            }
-        }
+
+        Endereco endereco = new Endereco();
+        endereco.setLogradouro(dto.getEndereco().getLogradouro());
+        endereco.setNumero(dto.getEndereco().getNumero());
+        endereco.setBairro(dto.getEndereco().getBairro());
+        endereco.setCidade(dto.getEndereco().getCidade());
+        endereco.setEstado(dto.getEndereco().getEstado());
+        endereco.setCep(dto.getEndereco().getCep());
+        endereco.setComplemento(dto.getEndereco().getComplemento());
+
+        entity.setEndereco(endereco); // Não precisa salvar manualmente
     }
-    
+
     private void copyUpdateDtoToEntity(CampusUpdateDTO dto, Campus entity) {
         if (dto.getNome() != null && !dto.getNome().isBlank()) {
             entity.setNome(dto.getNome());
         }
-        
+
         if (dto.getEndereco() != null) {
-            if (dto.getEndereco().getId() != null) {
-                Endereco endereco = enderecoRepository.findById(dto.getEndereco().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Endereço não encontrado"));
+            Endereco endereco = entity.getEndereco();
+
+            if (endereco == null) {
+                endereco = new Endereco();
                 entity.setEndereco(endereco);
-            } else {
-                Endereco endereco = new Endereco();
+            }
+
+            if (dto.getEndereco().getLogradouro() != null) {
                 endereco.setLogradouro(dto.getEndereco().getLogradouro());
+            }
+            if (dto.getEndereco().getNumero() != null) {
                 endereco.setNumero(dto.getEndereco().getNumero());
+            }
+            if (dto.getEndereco().getBairro() != null) {
                 endereco.setBairro(dto.getEndereco().getBairro());
+            }
+            if (dto.getEndereco().getCidade() != null) {
                 endereco.setCidade(dto.getEndereco().getCidade());
+            }
+            if (dto.getEndereco().getEstado() != null) {
                 endereco.setEstado(dto.getEndereco().getEstado());
+            }
+            if (dto.getEndereco().getCep() != null) {
                 endereco.setCep(dto.getEndereco().getCep());
+            }
+            if (dto.getEndereco().getComplemento() != null) {
                 endereco.setComplemento(dto.getEndereco().getComplemento());
-                entity.setEndereco(endereco);
             }
         }
     }

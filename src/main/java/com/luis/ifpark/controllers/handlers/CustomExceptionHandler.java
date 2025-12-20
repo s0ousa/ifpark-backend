@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -58,6 +59,18 @@ public class CustomExceptionHandler {
             err.addError(f.getField(), f.getDefaultMessage());
         }
         
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<CustomError> badCredentials(BadCredentialsException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        CustomError err = new CustomError(
+                Instant.now(),
+                status.value(),
+                "Email ou senha incorretos.",
+                request.getRequestURI()
+        );
         return ResponseEntity.status(status).body(err);
     }
 

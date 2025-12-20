@@ -23,7 +23,7 @@ public class Campus {
     @Column(nullable = false)
     private String nome;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(name = "endereco_id", nullable = false)
     private Endereco endereco;
 
