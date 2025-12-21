@@ -3,6 +3,7 @@ package com.luis.ifpark.controllers;
 import com.luis.ifpark.dtos.pessoa.PessoaCreateDTO;
 import com.luis.ifpark.dtos.pessoa.PessoaResponseDTO;
 import com.luis.ifpark.dtos.pessoa.PessoaUpdateDTO;
+import com.luis.ifpark.dtos.pessoa.StatusPessoaUpdateDTO;
 import com.luis.ifpark.services.PessoaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,5 +67,15 @@ public class PessoaController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         pessoaService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<PessoaResponseDTO> atualizarStatus(
+            @PathVariable UUID id,
+            @RequestBody @Valid StatusPessoaUpdateDTO dto) {
+
+        PessoaResponseDTO pessoaAtualizada = pessoaService.atualizarStatus(id, dto.getStatus());
+        return ResponseEntity.ok(pessoaAtualizada);
     }
 }

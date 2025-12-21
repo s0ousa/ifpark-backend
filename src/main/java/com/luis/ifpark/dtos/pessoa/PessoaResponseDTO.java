@@ -1,5 +1,7 @@
 package com.luis.ifpark.dtos.pessoa;
 
+import com.luis.ifpark.dtos.endereco.EnderecoDTO;
+import com.luis.ifpark.entities.Pessoa;
 import com.luis.ifpark.entities.enums.TipoPessoa;
 import com.luis.ifpark.entities.enums.StatusPessoa;
 import lombok.AllArgsConstructor;
@@ -24,4 +26,14 @@ public class PessoaResponseDTO {
     
     // Não incluí relacionamentos para evitar loops infinitos
     // Podem ser tratados separadamente se necessário
+
+    public PessoaResponseDTO(Pessoa entity) {
+        this.id = entity.getId();
+        this.nome = entity.getNome();
+        this.cpf = entity.getCpf();
+        this.matricula = entity.getMatricula();
+        this.tipo = entity.getTipo();
+        this.status = entity.getStatus();
+        this.telefone = entity.getTelefone();
+    }
 }

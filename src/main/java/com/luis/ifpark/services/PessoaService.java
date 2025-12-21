@@ -104,6 +104,17 @@ public class PessoaService {
         pessoaRepository.save(pessoa);
     }
 
+    @Transactional
+    public PessoaResponseDTO atualizarStatus(UUID id, StatusPessoa novoStatus) {
+        Pessoa pessoa = pessoaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada"));
+
+        pessoa.setStatus(novoStatus);
+        pessoa = pessoaRepository.save(pessoa);
+
+        return new PessoaResponseDTO(pessoa);
+    }
+
     private PessoaResponseDTO toResponseDTO(Pessoa pessoa) {
         PessoaResponseDTO dto = new PessoaResponseDTO();
         dto.setId(pessoa.getId());

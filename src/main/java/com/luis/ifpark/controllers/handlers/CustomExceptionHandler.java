@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -62,6 +64,21 @@ public class CustomExceptionHandler {
         return ResponseEntity.status(status).body(err);
     }
 
+    @ExceptionHandler(org.springframework.security.authentication.DisabledException.class)
+    public ResponseEntity<CustomError> disabledException(org.springframework.security.authentication.DisabledException e, HttpServletRequest request) {
+        System.out.println("=== HANDLER DISABLED EXCEPTION CHAMADO ===");
+        System.out.println("Mensagem: " + e.getMessage());
+
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        CustomError err = new CustomError(
+                Instant.now(),
+                status.value(),
+                e.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(err);
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<CustomError> badCredentials(BadCredentialsException e, HttpServletRequest request) {
         HttpStatus status = HttpStatus.UNAUTHORIZED;
@@ -74,22 +91,58 @@ public class CustomExceptionHandler {
         return ResponseEntity.status(status).body(err);
     }
 
-    @ExceptionHandler({AuthenticationException.class, AccessDeniedException.class})
-    public ResponseEntity<CustomError> securityException(Exception e, HttpServletRequest request) {
-        HttpStatus status = (e instanceof AuthenticationException) ? 
-            HttpStatus.UNAUTHORIZED : HttpStatus.FORBIDDEN;
-            
-        String errorMessage = (e instanceof AuthenticationException) ?
-            "Acesso não autorizado. Token não fornecido ou inválido." :
-            "Acesso negado. Você não tem permissão para acessar este recurso.";
-            
+    @ExceptionHandler({AccessDeniedException.class})
+    public ResponseEntity<CustomError> accessDeniedException(AccessDeniedException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.FORBIDDEN;
         CustomError err = new CustomError(
-            Instant.now(), 
-            status.value(), 
-            errorMessage, 
-            request.getRequestURI()
+                Instant.now(),
+                status.value(),
+                "Acesso negado. Você não tem permissão para acessar este recurso.",
+                request.getRequestURI()
         );
-        
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(InternalAuthenticationServiceException.class)
+    public ResponseEntity<CustomError> internalAuthenticationServiceException(InternalAuthenticationServiceException e,
+            HttpServletRequest request) {
+
+        System.out.println("=== HANDLER INTERNAL AUTH SERVICE EXCEPTION ===");
+
+        if (e.getCause() instanceof DisabledException) {
+            HttpStatus status = HttpStatus.FORBIDDEN;
+            CustomError err = new CustomError(
+                    Instant.now(),
+                    status.value(),
+                    e.getMessage(),
+                    request.getRequestURI()
+            );
+            return ResponseEntity.status(status).body(err);
+        }
+
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        CustomError err = new CustomError(
+                Instant.now(),
+                status.value(),
+                "Erro interno de autenticação.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<CustomError> authenticationException(AuthenticationException e, HttpServletRequest request) {
+
+        System.out.println("=== HANDLER AUTHENTICATION EXCEPTION CHAMADO ===");
+        System.out.println("Tipo da exceção: " + e.getClass().getName());
+        System.out.println("Mensagem: " + e.getMessage());
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        CustomError err = new CustomError(
+                Instant.now(),
+                status.value(),
+                "Acesso não autorizado. Token não fornecido ou inválido.",
+                request.getRequestURI()
+        );
         return ResponseEntity.status(status).body(err);
     }
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
