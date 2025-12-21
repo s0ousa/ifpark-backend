@@ -11,7 +11,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import org.hibernate.validator.constraints.br.CPF;
+
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -44,6 +47,9 @@ public class RegistroCompletoDTO {
     @Pattern(regexp = "\\(\\d{2}\\) \\d{4,5}-\\d{4}", message = "Telefone deve estar no formato (XX) XXXXX-XXXX")
     @Size(max = 15, message = "Telefone deve ter no máximo 15 caracteres")
     private String telefone;
+
+    @NotNull(message = "Campus é obrigatório")
+    private UUID campusId;
 
     // Campos de endereço
     @NotBlank(message = "Logradouro é obrigatório")

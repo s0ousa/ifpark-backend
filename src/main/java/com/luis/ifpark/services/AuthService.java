@@ -1,6 +1,8 @@
 package com.luis.ifpark.services;
 
 import com.luis.ifpark.dtos.auth.RegistroCompletoDTO;
+import com.luis.ifpark.dtos.campus.CampusDTO;
+import com.luis.ifpark.dtos.campus.CampusResumoDTO;
 import com.luis.ifpark.dtos.usuario.UsuarioResponseDTO;
 import com.luis.ifpark.entities.Campus;
 import com.luis.ifpark.entities.Endereco;
@@ -57,7 +59,8 @@ public class AuthService {
         if (dto.getTipo() == TipoPessoa.ALUNO && (dto.getMatricula() == null || dto.getMatricula().isEmpty())) {
             throw new IllegalArgumentException("Matrícula é obrigatória para alunos");
         }
-
+        Campus campus = campusRepository.findById(dto.getCampusId())
+                .orElseThrow(() -> new ResourceNotFoundException("Campus não encontrado"));
 
         // Criar endereço
         Endereco endereco = new Endereco();
@@ -86,6 +89,7 @@ public class AuthService {
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         usuario.setPapel(PapelUsuario.ROLE_COMUM);
         usuario.setPessoa(savedPessoa);
+        usuario.setCampus(campus);
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
         savedPessoa.setUsuario(savedUsuario);
@@ -160,11 +164,7 @@ public class AuthService {
         
         if (usuario.getCampus() != null) {
             // Criar um DTO de campus simplificado
-            dto.setCampus(new com.luis.ifpark.dtos.campus.CampusDTO(
-                usuario.getCampus().getId(),
-                usuario.getCampus().getNome(),
-                null // Endereço será carregado se necessário
-            ));
+            dto.setCampus(new CampusDTO(usuario.getCampus()));
         }
         
         return dto;

@@ -92,5 +92,20 @@ public class CustomExceptionHandler {
         
         return ResponseEntity.status(status).body(err);
     }
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<CustomError> dataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException e,
+                                                              HttpServletRequest request) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        String message = "Violação de integridade de dados. Campo duplicado (Matrícula, CPF ou Email) ou vínculo inválido.";
+
+        CustomError err = new CustomError(
+                Instant.now(),
+                status.value(),
+                message,
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(status).body(err);
+    }
 
 }
