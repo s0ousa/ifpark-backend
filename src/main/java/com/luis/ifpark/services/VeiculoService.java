@@ -1,6 +1,7 @@
 package com.luis.ifpark.services;
 
-import com.luis.ifpark.dtos.VeiculoDTO;
+import com.luis.ifpark.dtos.veiculo.VeiculoCreateDTO;
+import com.luis.ifpark.dtos.veiculo.VeiculoDTO;
 import com.luis.ifpark.entities.Pessoa;
 import com.luis.ifpark.entities.Veiculo;
 import com.luis.ifpark.entities.enums.StatusAprovacao;
@@ -49,13 +50,25 @@ public class VeiculoService {
     }
 
     @Transactional
-    public VeiculoDTO insert(VeiculoDTO dto) {
-        Veiculo entity = new Veiculo();
-        copyDtoToEntity(dto, entity);
-        entity.setStatusAprovacao(StatusAprovacao.PENDENTE); // Novos veículos começam como pendentes
-        entity = repository.save(entity);
-        return new VeiculoDTO(entity);
+    public VeiculoDTO insert(VeiculoCreateDTO dto) {
+        Pessoa pessoa = pessoaRepository.findById(dto.getPessoaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada"));
+
+        if (repository.existsByPlaca(dto.getPlaca().toUpperCase())) {
+            throw new DataIntegrityViolationException("Placa já cadastrada");
+        }
+
+        Veiculo veiculo = new Veiculo();
+        veiculo.setPlaca(dto.getPlaca().toUpperCase());
+        veiculo.setModelo(dto.getModelo());
+        veiculo.setStatusAprovacao(StatusAprovacao.PENDENTE);
+        veiculo.setPessoa(pessoa);
+
+        veiculo = repository.save(veiculo);
+
+        return new VeiculoDTO(veiculo);
     }
+
 
     @Transactional
     public VeiculoDTO update(UUID id, VeiculoDTO dto) {

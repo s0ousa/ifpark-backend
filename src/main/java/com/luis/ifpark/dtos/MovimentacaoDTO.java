@@ -1,6 +1,8 @@
 package com.luis.ifpark.dtos;
 
 import com.luis.ifpark.dtos.estacionamento.EstacionamentoDTO;
+import com.luis.ifpark.dtos.usuario.UsuarioUpdateDTO;
+import com.luis.ifpark.dtos.veiculo.VeiculoDTO;
 import com.luis.ifpark.entities.Movimentacao;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -28,9 +30,9 @@ public class MovimentacaoDTO {
     private EstacionamentoDTO estacionamento;
 
     @NotNull(message = "Vigia de entrada é obrigatório")
-    private UsuarioDTO vigiaEntrada;
+    private UsuarioUpdateDTO.UsuarioDTO vigiaEntrada;
 
-    private UsuarioDTO vigiaSaida;
+    private UsuarioUpdateDTO.UsuarioDTO vigiaSaida;
 
     public MovimentacaoDTO(Movimentacao entity) {
         this.id = entity.getId();
@@ -38,7 +40,7 @@ public class MovimentacaoDTO {
         this.dataSaida = entity.getDataSaida();
         this.veiculo = entity.getVeiculo() != null ? new VeiculoDTO(entity.getVeiculo()) : null;
         this.estacionamento = entity.getEstacionamento() != null ? new EstacionamentoDTO(entity.getEstacionamento()) : null;
-        this.vigiaEntrada = entity.getVigiaEntrada() != null ? new UsuarioDTO(entity.getVigiaEntrada()) : null;
-        this.vigiaSaida = entity.getVigiaSaida() != null ? new UsuarioDTO(entity.getVigiaSaida()) : null;
+        this.vigiaEntrada = entity.getVigiaEntrada() != null ? new UsuarioUpdateDTO.UsuarioDTO(entity.getVigiaEntrada()) : null;
+        this.vigiaSaida = entity.getVigiaSaida() != null ? new UsuarioUpdateDTO.UsuarioDTO(entity.getVigiaSaida()) : null;
     }
 }

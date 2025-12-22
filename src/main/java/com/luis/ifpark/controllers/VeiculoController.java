@@ -1,6 +1,8 @@
 package com.luis.ifpark.controllers;
 
-import com.luis.ifpark.dtos.VeiculoDTO;
+import com.luis.ifpark.dtos.veiculo.VeiculoCreateDTO;
+import com.luis.ifpark.dtos.veiculo.VeiculoDTO;
+import com.luis.ifpark.dtos.veiculo.VeiculoRejectedDTO;
 import com.luis.ifpark.services.VeiculoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +45,7 @@ public class VeiculoController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('COMUM', 'ADMIN', 'SUPER_ADMIN')")
-    public ResponseEntity<VeiculoDTO> insert(@Valid @RequestBody VeiculoDTO dto) {
+    public ResponseEntity<VeiculoDTO> insert(@Valid @RequestBody VeiculoCreateDTO dto) {
         VeiculoDTO createdDto = veiculoService.insert(dto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -68,8 +70,8 @@ public class VeiculoController {
 
     @PutMapping(value = "/rejeitar/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-    public ResponseEntity<VeiculoDTO> rejeitarVeiculo(@PathVariable UUID id, @RequestParam String motivo) {
-        VeiculoDTO updatedDto = veiculoService.rejeitarVeiculo(id, motivo);
+    public ResponseEntity<VeiculoDTO> rejeitarVeiculo(@PathVariable UUID id, @RequestBody VeiculoRejectedDTO dto) {
+        VeiculoDTO updatedDto = veiculoService.rejeitarVeiculo(id, dto.getMotivo());
         return ResponseEntity.ok(updatedDto);
     }
 

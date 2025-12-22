@@ -1,4 +1,4 @@
-package com.luis.ifpark.dtos;
+package com.luis.ifpark.dtos.veiculo;
 
 import com.luis.ifpark.dtos.pessoa.PessoaUpdateDTO;
 import com.luis.ifpark.entities.Veiculo;
