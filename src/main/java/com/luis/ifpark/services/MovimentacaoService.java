@@ -1,11 +1,16 @@
 package com.luis.ifpark.services;
 
 import com.luis.ifpark.dtos.MovimentacaoDTO;
+import com.luis.ifpark.dtos.movimentacao.EntryRegisterDTO;
+import com.luis.ifpark.dtos.movimentacao.ExitRegisterDTO;
+import com.luis.ifpark.dtos.movimentacao.MovimentacaoResponseDTO;
 import com.luis.ifpark.entities.Estacionamento;
 import com.luis.ifpark.entities.Movimentacao;
 import com.luis.ifpark.entities.Usuario;
 import com.luis.ifpark.entities.Veiculo;
+import com.luis.ifpark.entities.enums.StatusAprovacao;
 import com.luis.ifpark.exceptions.DatabaseException;
+import com.luis.ifpark.exceptions.RegraDeNegocioException;
 import com.luis.ifpark.exceptions.ResourceNotFoundException;
 import com.luis.ifpark.repositories.EstacionamentoRepository;
 import com.luis.ifpark.repositories.MovimentacaoRepository;
@@ -16,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,45 +73,77 @@ public class MovimentacaoService {
     }
 
     @Transactional
-    public MovimentacaoDTO registrarEntrada(MovimentacaoDTO dto, UUID vigiaId) {
-        Movimentacao entity = new Movimentacao();
-        copyDtoToEntity(dto, entity);
-        
-        // Define a data de entrada como agora
-        entity.setDataEntrada(LocalDateTime.now());
-        
-        // Define o vigia de entrada
-        Usuario vigia = usuarioRepository.findById(vigiaId)
-            .orElseThrow(() -> new ResourceNotFoundException("Vigia não encontrado"));
-        entity.setVigiaEntrada(vigia);
-        
-        entity = repository.save(entity);
-        return new MovimentacaoDTO(entity);
+    public MovimentacaoResponseDTO registrarEntrada(EntryRegisterDTO dto) {
+        String emailVigia = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Usuario vigia = usuarioRepository.findByEmail(emailVigia)
+                .orElseThrow(() -> new ResourceNotFoundException("Vigia logado não encontrado no banco."));
+
+        Veiculo veiculo = veiculoRepository.findByPlacaIgnoreCase(dto.getPlaca())
+                .orElseThrow(() -> new RegraDeNegocioException("Veículo não encontrado."));
+
+        Estacionamento estacionamento = estacionamentoRepository.findByIdWithLock(dto.getEstacionamentoId())
+                .orElseThrow(() -> new ResourceNotFoundException("Estacionamento não encontrado."));
+
+        if (veiculo.getStatusAprovacao() != StatusAprovacao.APROVADO) {
+            throw new RegraDeNegocioException("Veículo não aprovado.");
+        }
+        if (repository.existsByVeiculoAndDataSaidaIsNull(veiculo)) {
+            throw new RegraDeNegocioException("Veículo já está dentro de um estacionamento.");
+        }
+        long ocupadas = repository.countByEstacionamentoAndDataSaidaIsNull(estacionamento);
+        if (ocupadas >= estacionamento.getCapacidadeTotal()) {
+            throw new RegraDeNegocioException("Estacionamento lotado.");
+        }
+
+        Movimentacao mov = new Movimentacao();
+        mov.setVeiculo(veiculo);
+        mov.setEstacionamento(estacionamento);
+        mov.setVigiaEntrada(vigia);
+        mov.setDataEntrada(LocalDateTime.now());
+
+        return converterParaDTO(repository.save(mov));
     }
 
     @Transactional
-    public MovimentacaoDTO registrarSaida(UUID id, UUID vigiaId) {
-        try {
-            Movimentacao entity = repository.getReferenceById(id);
-            
-            // Verifica se já não tem data de saída
-            if (entity.getDataSaida() != null) {
-                throw new IllegalStateException("Saída já registrada para esta movimentação");
-            }
-            
-            // Define a data de saída como agora
-            entity.setDataSaida(LocalDateTime.now());
-            
-            // Define o vigia de saída
-            Usuario vigia = usuarioRepository.findById(vigiaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vigia não encontrado"));
-            entity.setVigiaSaida(vigia);
-            
-            entity = repository.save(entity);
-            return new MovimentacaoDTO(entity);
-        } catch (EntityNotFoundException e) {
-            throw new ResourceNotFoundException("Movimentação não encontrada");
+    public MovimentacaoResponseDTO registrarSaida(ExitRegisterDTO dto) {
+        Veiculo veiculo = veiculoRepository.findByPlacaIgnoreCase(dto.getPlaca())
+                .orElseThrow(() -> new ResourceNotFoundException("Veículo não encontrado."));
+
+        String emailVigia = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Usuario vigia = usuarioRepository.findByEmail(emailVigia)
+                .orElseThrow(() -> new ResourceNotFoundException("Vigia logado não encontrado no banco."));
+
+        Movimentacao mov = repository.findFirstByVeiculoAndDataSaidaIsNull(veiculo)
+                .orElseThrow(() -> new RegraDeNegocioException("Veículo não está estacionado."));
+
+        mov.setDataSaida(LocalDateTime.now());
+        mov.setVigiaSaida(vigia);
+
+        return converterParaDTO(repository.save(mov));
+    }
+
+    private MovimentacaoResponseDTO converterParaDTO(Movimentacao m) {
+        MovimentacaoResponseDTO dto = new MovimentacaoResponseDTO();
+        dto.setId(m.getId());
+        dto.setPlaca(m.getVeiculo().getPlaca());
+        dto.setModelo(m.getVeiculo().getModelo());
+
+        dto.setEstacionamentoId(m.getEstacionamento().getId());
+        dto.setNomeEstacionamento(m.getEstacionamento().getNome());
+
+        dto.setDataEntrada(m.getDataEntrada());
+        dto.setDataSaida(m.getDataSaida());
+
+        dto.setVigiaEntradaId(m.getVigiaEntrada().getId());
+        dto.setNomeVigiaEntrada(m.getVigiaEntrada().getPessoa().getNome());
+
+        if (m.getVigiaSaida() != null) {
+            dto.setVigiaSaidaId(m.getVigiaSaida().getId());
+            dto.setNomeVigiaSaida(m.getVigiaSaida().getPessoa().getNome());
         }
+        return dto;
     }
 
     @Transactional

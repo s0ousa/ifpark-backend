@@ -2,10 +2,7 @@ package com.luis.ifpark.controllers.handlers;
 
 import com.luis.ifpark.dtos.CustomError;
 import com.luis.ifpark.dtos.ValidationError;
-import com.luis.ifpark.exceptions.CpfJaCadastradoException;
-import com.luis.ifpark.exceptions.EmailJaCadastradoException;
-import com.luis.ifpark.exceptions.ResourceNotFoundException;
-import com.luis.ifpark.exceptions.DatabaseException;
+import com.luis.ifpark.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -160,5 +157,43 @@ public class CustomExceptionHandler {
 
         return ResponseEntity.status(status).body(err);
     }
+    @ExceptionHandler(RegraDeNegocioException.class)
+    public ResponseEntity<CustomError> regraDeNegocio(RegraDeNegocioException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.UNPROCESSABLE_ENTITY;
+        CustomError err = new CustomError(
+                Instant.now(),
+                status.value(),
+                e.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<CustomError> illegalArgument(IllegalArgumentException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        CustomError err = new CustomError(
+                Instant.now(),
+                status.value(),
+                e.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<CustomError> globalError(Exception e, HttpServletRequest request) {
+        e.printStackTrace();
+
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        CustomError err = new CustomError(
+                Instant.now(),
+                status.value(),
+                "Ocorreu um erro interno inesperado no servidor. Contate o suporte.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(err);
+    }
+
 
 }

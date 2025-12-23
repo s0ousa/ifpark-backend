@@ -1,6 +1,9 @@
 package com.luis.ifpark.controllers;
 
 import com.luis.ifpark.dtos.MovimentacaoDTO;
+import com.luis.ifpark.dtos.movimentacao.EntryRegisterDTO;
+import com.luis.ifpark.dtos.movimentacao.ExitRegisterDTO;
+import com.luis.ifpark.dtos.movimentacao.MovimentacaoResponseDTO;
 import com.luis.ifpark.entities.Usuario;
 import com.luis.ifpark.repositories.UsuarioRepository;
 import com.luis.ifpark.security.JwtUtil;
@@ -54,24 +57,22 @@ public class MovimentacaoController {
 
     @PostMapping(value = "/entrada")
     @PreAuthorize("hasAnyRole('VIGIA', 'SUPER_ADMIN')")
-    public ResponseEntity<MovimentacaoDTO> registrarEntrada(@Valid @RequestBody MovimentacaoDTO dto, 
-                                                           @RequestHeader("Authorization") String authHeader) {
-        UUID vigiaId = extractUserIdFromToken(authHeader); // Este método precisa ser implementado
-        MovimentacaoDTO createdDto = movimentacaoService.registrarEntrada(dto, vigiaId);
+    public ResponseEntity<MovimentacaoResponseDTO> registrarEntrada(@RequestBody @Valid EntryRegisterDTO dto) {
+        var response = movimentacaoService.registrarEntrada(dto);
+
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(createdDto.getId())
+                .buildAndExpand(response.getId())
                 .toUri();
-        return ResponseEntity.created(uri).body(createdDto);
+
+        return ResponseEntity.created(uri).body(response);
     }
 
-    @PostMapping(value = "/saida/{id}")
+    @PostMapping("/saida")
     @PreAuthorize("hasAnyRole('VIGIA', 'SUPER_ADMIN')")
-    public ResponseEntity<MovimentacaoDTO> registrarSaida(@PathVariable UUID id, 
-                                                         @RequestHeader("Authorization") String authHeader) {
-        UUID vigiaId = extractUserIdFromToken(authHeader);
-        MovimentacaoDTO updatedDto = movimentacaoService.registrarSaida(id, vigiaId);
-        return ResponseEntity.ok(updatedDto);
+    public ResponseEntity<MovimentacaoResponseDTO> saida(@RequestBody @Valid ExitRegisterDTO dto) {
+        var response = movimentacaoService.registrarSaida(dto);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping(value = "/{id}")
@@ -88,7 +89,6 @@ public class MovimentacaoController {
         return ResponseEntity.noContent().build();
     }
 
-    // Método auxiliar para extrair o ID do usuário do token JWT
     private UUID extractUserIdFromToken(String authHeader) {
         // Remover o prefixo "Bearer " do header
         String token = authHeader.substring(7);
