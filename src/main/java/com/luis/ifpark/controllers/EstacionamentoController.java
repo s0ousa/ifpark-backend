@@ -1,5 +1,6 @@
 package com.luis.ifpark.controllers;
 
+import com.luis.ifpark.dtos.estacionamento.EstacionamentoComVagasDTO;
 import com.luis.ifpark.dtos.estacionamento.EstacionamentoDTO;
 import com.luis.ifpark.dtos.estacionamento.EstacionamentoCreateDTO;
 import com.luis.ifpark.dtos.estacionamento.EstacionamentoUpdateDTO;
@@ -25,8 +26,8 @@ public class EstacionamentoController {
 
     @GetMapping(value = "/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN', 'COMUM')")
-    public ResponseEntity<EstacionamentoDTO> findById(@PathVariable UUID id) {
-        EstacionamentoDTO dto = service.findById(id);
+    public ResponseEntity<EstacionamentoComVagasDTO> findById(@PathVariable UUID id) {
+        EstacionamentoComVagasDTO dto = service.findById(id);
         return ResponseEntity.ok(dto);
     }
 
@@ -35,6 +36,17 @@ public class EstacionamentoController {
     public ResponseEntity<Page<EstacionamentoDTO>> findAll(@RequestParam(required = false) UUID campusId,
                                                            Pageable pageable) {
         Page<EstacionamentoDTO> dtoPage = service.findAll(pageable);
+        return ResponseEntity.ok(dtoPage);
+    }
+
+    @GetMapping(value = "/campus/{campusId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VIGIA')")
+    public ResponseEntity<Page<EstacionamentoDTO>> findByCampus(
+            @PathVariable UUID campusId,
+            Pageable pageable) {
+
+        Page<EstacionamentoDTO> dtoPage = service.findAllByCampusId(campusId, pageable);
+
         return ResponseEntity.ok(dtoPage);
     }
 

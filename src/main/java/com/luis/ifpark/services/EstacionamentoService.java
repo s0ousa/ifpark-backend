@@ -1,5 +1,6 @@
 package com.luis.ifpark.services;
 
+import com.luis.ifpark.dtos.estacionamento.EstacionamentoComVagasDTO;
 import com.luis.ifpark.dtos.estacionamento.EstacionamentoDTO;
 import com.luis.ifpark.dtos.estacionamento.EstacionamentoCreateDTO;
 import com.luis.ifpark.dtos.estacionamento.EstacionamentoUpdateDTO;
@@ -9,6 +10,7 @@ import com.luis.ifpark.exceptions.DatabaseException;
 import com.luis.ifpark.exceptions.ResourceNotFoundException;
 import com.luis.ifpark.repositories.CampusRepository;
 import com.luis.ifpark.repositories.EstacionamentoRepository;
+import com.luis.ifpark.repositories.MovimentacaoRepository;
 import com.luis.ifpark.utils.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +32,18 @@ public class EstacionamentoService {
     @Autowired
     private CampusRepository campusRepository;
 
+    @Autowired
+    private MovimentacaoRepository movimentacaoRepository;
+
     @Transactional(readOnly = true)
-    public EstacionamentoDTO findById(UUID id) {
+    public EstacionamentoComVagasDTO findById(UUID id) {
         Estacionamento estacionamentoResult = repository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Recurso não encontrado")
         );
-        return new EstacionamentoDTO(estacionamentoResult);
+
+        long ocupadas = movimentacaoRepository.countByEstacionamentoIdAndDataSaidaIsNull(id);
+
+        return new EstacionamentoComVagasDTO(estacionamentoResult, ocupadas);
     }
 
     @Transactional(readOnly = true)
@@ -46,12 +54,10 @@ public class EstacionamentoService {
 
     @Transactional(readOnly = true)
     public Page<EstacionamentoDTO> findAllByCampusId(UUID campusId, Pageable pageable) {
-        // Verifica se o campus existe
         if (!campusRepository.existsById(campusId)) {
             throw new ResourceNotFoundException("Campus não encontrado");
         }
 
-        // Verifica permissão
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.hasAccessToCampus(campusId)) {
             throw new SecurityException("Você não tem permissão para acessar este campus");
         }

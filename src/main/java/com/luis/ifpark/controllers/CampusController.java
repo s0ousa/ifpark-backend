@@ -24,12 +24,14 @@ public class CampusController {
     private CampusService service;
 
     @GetMapping(value = "/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA','COMUM','SUPER_ADMIN')")
     public ResponseEntity<CampusDTO> findById(@PathVariable UUID id) {
         CampusDTO dto = service.findById(id);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Page<CampusDTO>> findAll(Pageable pageable) {
         Page<CampusDTO> dtoPage = service.findAll(pageable);
         return ResponseEntity.ok(dtoPage);

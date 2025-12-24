@@ -20,4 +20,6 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, UUID
 
     // Conta quantos carros estão atualmente no estacionamento sem data de saída
     long countByEstacionamentoAndDataSaidaIsNull(Estacionamento estacionamento);
+
+    long countByEstacionamentoIdAndDataSaidaIsNull(UUID estacionamentoId);
 }
