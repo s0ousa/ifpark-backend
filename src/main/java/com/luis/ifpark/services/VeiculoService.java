@@ -49,6 +49,13 @@ public class VeiculoService {
         return result.stream().map(VeiculoDTO::new).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public VeiculoDTO findByPlaca(String placa) {
+        Veiculo veiculo = repository.findByPlacaIgnoreCase(placa)
+                .orElseThrow(() -> new ResourceNotFoundException("Veículo não encontrado com a placa: " + placa));
+        return new VeiculoDTO(veiculo);
+    }
+
     @Transactional
     public VeiculoDTO insert(VeiculoCreateDTO dto) {
         Pessoa pessoa = pessoaRepository.findById(dto.getPessoaId())

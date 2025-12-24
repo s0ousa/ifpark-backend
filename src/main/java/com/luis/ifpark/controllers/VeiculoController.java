@@ -75,6 +75,13 @@ public class VeiculoController {
         return ResponseEntity.ok(updatedDto);
     }
 
+    @GetMapping(value = "/placa/{placa}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN')")
+    public ResponseEntity<VeiculoDTO> findByPlaca(@PathVariable String placa) {
+        VeiculoDTO dto = veiculoService.findByPlaca(placa);
+        return ResponseEntity.ok(dto);
+    }
+
     @DeleteMapping(value = "/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
