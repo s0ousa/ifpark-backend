@@ -1,5 +1,6 @@
 package com.luis.ifpark.dtos.auth;
 
+import com.luis.ifpark.entities.enums.PapelUsuario;
 import com.luis.ifpark.entities.enums.TipoPessoa;
 import com.luis.ifpark.entities.enums.StatusPessoa;
 import jakarta.validation.constraints.Email;
@@ -50,6 +51,8 @@ public class RegistroCompletoDTO {
 
     @NotNull(message = "Campus é obrigatório")
     private UUID campusId;
+
+    private PapelUsuario papel;
 
     // Campos de endereço
     @NotBlank(message = "Logradouro é obrigatório")

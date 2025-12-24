@@ -1,15 +1,22 @@
 package com.luis.ifpark.services;
 
+import com.luis.ifpark.dtos.auth.RegistroCompletoDTO;
 import com.luis.ifpark.dtos.usuario.UsuarioCreateDTO;
 import com.luis.ifpark.dtos.usuario.UsuarioResponseDTO;
 import com.luis.ifpark.dtos.usuario.UsuarioUpdateDTO;
 import com.luis.ifpark.entities.Campus;
+import com.luis.ifpark.entities.Endereco;
 import com.luis.ifpark.entities.Pessoa;
 import com.luis.ifpark.entities.Usuario;
 import com.luis.ifpark.entities.enums.PapelUsuario;
+import com.luis.ifpark.entities.enums.StatusPessoa;
+import com.luis.ifpark.entities.enums.TipoPessoa;
+import com.luis.ifpark.exceptions.CpfJaCadastradoException;
 import com.luis.ifpark.exceptions.EmailJaCadastradoException;
+import com.luis.ifpark.exceptions.RegraDeNegocioException;
 import com.luis.ifpark.exceptions.ResourceNotFoundException;
 import com.luis.ifpark.repositories.CampusRepository;
+import com.luis.ifpark.repositories.EnderecoRepository;
 import com.luis.ifpark.repositories.PessoaRepository;
 import com.luis.ifpark.repositories.UsuarioRepository;
 import com.luis.ifpark.utils.SecurityUtils;
@@ -33,6 +40,9 @@ public class UsuarioService {
     
     @Autowired
     private CampusRepository campusRepository;
+
+    @Autowired
+    private EnderecoRepository enderecoRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -81,41 +91,59 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioResponseDTO create(UsuarioCreateDTO dto) {
-        // Verificar se email já existe
+    public UsuarioResponseDTO create(RegistroCompletoDTO dto) {
+        checkCreatePermission(dto);
+
+        if (pessoaRepository.existsByCpf(dto.getCpf())) {
+            throw new CpfJaCadastradoException("CPF já cadastrado: " + dto.getCpf());
+        }
+
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new EmailJaCadastradoException("Email já cadastrado: " + dto.getEmail());
         }
 
-        // Encontrar a pessoa pelo ID
-        Pessoa pessoa = pessoaRepository.findById(dto.getPessoaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + dto.getPessoaId()));
-
-        // Verificar se a pessoa já tem um usuário
-        if (pessoa.getUsuario() != null) {
-            throw new IllegalArgumentException("Pessoa já possui um usuário associado");
+        if (dto.getTipo() == TipoPessoa.ALUNO && (dto.getMatricula() == null || dto.getMatricula().isEmpty())) {
+            throw new IllegalArgumentException("Matrícula é obrigatória para alunos");
         }
 
-        // Verificar permissões de criação
-        checkCreatePermission(dto);
-        
-        // Criar o Usuario
+        if (dto.getPapel()== null) {
+            throw new RegraDeNegocioException("Papel é obrigatório para usuários");
+        }
+
+        Campus campus = campusRepository.findById(dto.getCampusId())
+                .orElseThrow(() -> new ResourceNotFoundException("Campus não encontrado"));
+
+        // Criar endereço
+        Endereco endereco = new Endereco();
+        endereco.setLogradouro(dto.getLogradouro());
+        endereco.setNumero(dto.getNumero());
+        endereco.setComplemento(dto.getComplemento());
+        endereco.setBairro(dto.getBairro());
+        endereco.setCidade(dto.getCidade());
+        endereco.setEstado(dto.getEstado());
+        endereco.setCep(dto.getCep());
+        Endereco savedEndereco = enderecoRepository.save(endereco);
+
+        Pessoa pessoa = new Pessoa();
+        pessoa.setNome(dto.getNome());
+        pessoa.setCpf(dto.getCpf());
+        pessoa.setMatricula(dto.getMatricula());
+        pessoa.setTipo(dto.getTipo());
+        pessoa.setStatus(StatusPessoa.ATIVO);
+        pessoa.setTelefone(dto.getTelefone());
+        pessoa.setEndereco(savedEndereco);
+
+        Pessoa savedPessoa = pessoaRepository.save(pessoa);
+
         Usuario usuario = new Usuario();
         usuario.setEmail(dto.getEmail());
         usuario.setSenha(passwordEncoder.encode(dto.getSenha())); // Codificar a senha
         usuario.setPapel(dto.getPapel());
         usuario.setPessoa(pessoa);
-        
-        // Associar campus se fornecido
-        if (dto.getCampusId() != null) {
-            Campus campus = campusRepository.findById(dto.getCampusId())
-                .orElseThrow(() -> new ResourceNotFoundException("Campus não encontrado com ID: " + dto.getCampusId()));
-            usuario.setCampus(campus);
-        }
+        usuario.setCampus(campus);
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
 
-        // Atualizar a pessoa com a referência ao usuário
         pessoa.setUsuario(savedUsuario);
         pessoaRepository.save(pessoa);
 
@@ -199,10 +227,8 @@ public class UsuarioService {
         }
     }
     
-    /**
-     * Verifica se o usuário atual tem permissão para criar um usuário com as permissões especificadas
-     */
-    private void checkCreatePermission(UsuarioCreateDTO dto) {
+
+    private void checkCreatePermission(RegistroCompletoDTO dto) {
         // SUPER_ADMIN pode criar qualquer tipo de usuário
         if (SecurityUtils.isSuperAdmin()) {
             return;
@@ -223,9 +249,9 @@ public class UsuarioService {
                 throw new SecurityException("Acesso negado: ADMIN só pode criar usuários no seu campus");
             }
             
-            // ADMIN não pode criar outro ADMIN ou SUPER_ADMIN
-            if (dto.getPapel() == PapelUsuario.ROLE_ADMIN || dto.getPapel() == PapelUsuario.ROLE_SUPER_ADMIN) {
-                throw new SecurityException("Acesso negado: ADMIN não pode criar usuários com papel ADMIN ou SUPER_ADMIN");
+            // ADMIN não pode criar SUPER_ADMIN
+            if (dto.getPapel() == PapelUsuario.ROLE_SUPER_ADMIN) {
+                throw new SecurityException("Acesso negado: ADMIN não pode criar usuários com papel de SUPER_ADMIN");
             }
             return;
         }

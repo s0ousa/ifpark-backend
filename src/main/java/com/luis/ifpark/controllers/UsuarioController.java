@@ -1,5 +1,6 @@
 package com.luis.ifpark.controllers;
 
+import com.luis.ifpark.dtos.auth.RegistroCompletoDTO;
 import com.luis.ifpark.dtos.usuario.UsuarioCreateDTO;
 import com.luis.ifpark.dtos.usuario.UsuarioResponseDTO;
 import com.luis.ifpark.dtos.usuario.UsuarioUpdateDTO;
@@ -45,7 +46,7 @@ public class UsuarioController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-    public ResponseEntity<UsuarioResponseDTO> create(@Valid @RequestBody UsuarioCreateDTO dto) {
+    public ResponseEntity<UsuarioResponseDTO> create(@Valid @RequestBody RegistroCompletoDTO dto) {
         UsuarioResponseDTO createdDto = usuarioService.create(dto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
