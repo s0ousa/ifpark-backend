@@ -33,19 +33,11 @@ public class EstacionamentoController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN')")
-    public ResponseEntity<Page<EstacionamentoDTO>> findAll(@RequestParam(required = false) UUID campusId,
-                                                           Pageable pageable) {
-        Page<EstacionamentoDTO> dtoPage = service.findAll(pageable);
-        return ResponseEntity.ok(dtoPage);
-    }
-
-    @GetMapping(value = "/campus/{campusId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VIGIA')")
-    public ResponseEntity<Page<EstacionamentoDTO>> findByCampus(
-            @PathVariable UUID campusId,
+    public ResponseEntity<Page<EstacionamentoDTO>> findAll(
+            @RequestParam(required = false) UUID campusId, // O parâmetro opcional
             Pageable pageable) {
 
-        Page<EstacionamentoDTO> dtoPage = service.findAllByCampusId(campusId, pageable);
+        Page<EstacionamentoDTO> dtoPage = service.findAll(campusId, pageable);
 
         return ResponseEntity.ok(dtoPage);
     }

@@ -6,7 +6,9 @@ import com.luis.ifpark.dtos.estacionamento.EstacionamentoCreateDTO;
 import com.luis.ifpark.dtos.estacionamento.EstacionamentoUpdateDTO;
 import com.luis.ifpark.entities.Campus;
 import com.luis.ifpark.entities.Estacionamento;
+import com.luis.ifpark.entities.Usuario;
 import com.luis.ifpark.exceptions.DatabaseException;
+import com.luis.ifpark.exceptions.RegraDeNegocioException;
 import com.luis.ifpark.exceptions.ResourceNotFoundException;
 import com.luis.ifpark.repositories.CampusRepository;
 import com.luis.ifpark.repositories.EstacionamentoRepository;
@@ -47,23 +49,32 @@ public class EstacionamentoService {
     }
 
     @Transactional(readOnly = true)
-    public Page<EstacionamentoDTO> findAll(Pageable pageable) {
-        Page<Estacionamento> result = repository.findAll(pageable);
-        return result.map(estacionamento -> new EstacionamentoDTO(estacionamento));
-    }
+    public Page<EstacionamentoDTO> findAll(UUID campusId, Pageable pageable) {
+        if (campusId != null) {
+            if (!campusRepository.existsById(campusId)) {
+                throw new ResourceNotFoundException("Campus não encontrado");
+            }
 
-    @Transactional(readOnly = true)
-    public Page<EstacionamentoDTO> findAllByCampusId(UUID campusId, Pageable pageable) {
-        if (!campusRepository.existsById(campusId)) {
-            throw new ResourceNotFoundException("Campus não encontrado");
+            if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.hasAccessToCampus(campusId)) {
+                throw new SecurityException("Você não tem permissão para acessar os dados deste campus");
+            }
+
+            return repository.findByCampusId(campusId, pageable)
+                    .map(EstacionamentoDTO::new);
         }
 
-        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.hasAccessToCampus(campusId)) {
-            throw new SecurityException("Você não tem permissão para acessar este campus");
+        if (SecurityUtils.isSuperAdmin()) {
+            return repository.findAll(pageable)
+                    .map(EstacionamentoDTO::new);
         }
 
-        Page<Estacionamento> result = repository.findByCampusId(campusId, pageable);
-        return result.map(EstacionamentoDTO::new);
+        Usuario usuarioLogado = SecurityUtils.getCurrentUser();
+        if (usuarioLogado.getCampus() == null) {
+            throw new RegraDeNegocioException("Usuário não está vinculado a nenhum campus");
+        }
+
+        return repository.findByCampusId(usuarioLogado.getCampus().getId(), pageable)
+                .map(EstacionamentoDTO::new);
     }
 
     @Transactional
