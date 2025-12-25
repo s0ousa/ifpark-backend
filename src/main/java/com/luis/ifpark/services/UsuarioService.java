@@ -21,6 +21,7 @@ import com.luis.ifpark.repositories.PessoaRepository;
 import com.luis.ifpark.repositories.UsuarioRepository;
 import com.luis.ifpark.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -113,7 +114,6 @@ public class UsuarioService {
         Campus campus = campusRepository.findById(dto.getCampusId())
                 .orElseThrow(() -> new ResourceNotFoundException("Campus não encontrado"));
 
-        // Criar endereço
         Endereco endereco = new Endereco();
         endereco.setLogradouro(dto.getLogradouro());
         endereco.setNumero(dto.getNumero());
@@ -206,17 +206,17 @@ public class UsuarioService {
         
         Usuario currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            throw new SecurityException("Usuário não autenticado");
+            throw new AccessDeniedException("Usuário não autenticado");
         }
         
         // ADMIN pode acessar usuários do mesmo campus
         if (currentUser.getPapel() == PapelUsuario.ROLE_ADMIN) {
             if (currentUser.getCampus() == null || targetUser.getCampus() == null) {
-                throw new SecurityException("Acesso negado: Usuário ou targetUser sem campus associado");
+                throw new AccessDeniedException("Acesso negado: Usuário ou targetUser sem campus associado");
             }
             
             if (!currentUser.getCampus().getId().equals(targetUser.getCampus().getId())) {
-                throw new SecurityException("Acesso negado: Você só pode acessar usuários do seu campus");
+                throw new AccessDeniedException("Acesso negado: Você só pode acessar usuários do seu campus");
             }
             return;
         }
@@ -236,28 +236,28 @@ public class UsuarioService {
         
         Usuario currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            throw new SecurityException("Usuário não autenticado");
+            throw new AccessDeniedException("Usuário não autenticado");
         }
         
         // ADMIN só pode criar usuários do mesmo campus
         if (currentUser.getPapel() == PapelUsuario.ROLE_ADMIN) {
             if (currentUser.getCampus() == null) {
-                throw new SecurityException("Acesso negado: ADMIN sem campus associado");
+                throw new AccessDeniedException("Acesso negado: ADMIN sem campus associado");
             }
             
             if (dto.getCampusId() == null || !dto.getCampusId().equals(currentUser.getCampus().getId())) {
-                throw new SecurityException("Acesso negado: ADMIN só pode criar usuários no seu campus");
+                throw new AccessDeniedException("Acesso negado: ADMIN só pode criar usuários no seu campus");
             }
             
             // ADMIN não pode criar SUPER_ADMIN
             if (dto.getPapel() == PapelUsuario.ROLE_SUPER_ADMIN) {
-                throw new SecurityException("Acesso negado: ADMIN não pode criar usuários com papel de SUPER_ADMIN");
+                throw new AccessDeniedException("Acesso negado: ADMIN não pode criar usuários com papel de SUPER_ADMIN");
             }
             return;
         }
         
         // VIGIA e COMUM não podem criar usuários
-        throw new SecurityException("Acesso negado: Você não tem permissão para criar usuários");
+        throw new AccessDeniedException("Acesso negado: Você não tem permissão para criar usuários");
     }
 
     private UsuarioResponseDTO toResponseDTO(Usuario usuario) {
