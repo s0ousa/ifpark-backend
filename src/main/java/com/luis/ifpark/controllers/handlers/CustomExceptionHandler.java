@@ -94,7 +94,7 @@ public class CustomExceptionHandler {
         CustomError err = new CustomError(
                 Instant.now(),
                 status.value(),
-                "Acesso negado. Você não tem permissão para acessar este recurso.",
+                e.getMessage(),
                 request.getRequestURI()
         );
         return ResponseEntity.status(status).body(err);

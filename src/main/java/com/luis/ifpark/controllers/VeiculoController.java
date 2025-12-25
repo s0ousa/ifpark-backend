@@ -36,6 +36,13 @@ public class VeiculoController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping(value = "/campus/{campusId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN')")
+    public ResponseEntity<List<VeiculoDTO>> findByCampus(@PathVariable UUID campusId) {
+        List<VeiculoDTO> list = veiculoService.findByCampus(campusId);
+        return ResponseEntity.ok(list);
+    }
+
     @GetMapping(value = "/pessoa/{pessoaId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN', 'COMUM')")
     public ResponseEntity<List<VeiculoDTO>> findByPessoaId(@PathVariable UUID pessoaId) {
