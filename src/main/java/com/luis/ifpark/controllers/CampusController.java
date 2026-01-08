@@ -31,7 +31,6 @@ public class CampusController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Page<CampusDTO>> findAll(Pageable pageable) {
         Page<CampusDTO> dtoPage = service.findAll(pageable);
         return ResponseEntity.ok(dtoPage);
