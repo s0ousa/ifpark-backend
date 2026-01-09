@@ -4,6 +4,7 @@ import com.luis.ifpark.dtos.auth.LoginDTO;
 import com.luis.ifpark.dtos.auth.LoginResponseDTO;
 import com.luis.ifpark.dtos.auth.RegistroCompletoDTO;
 import com.luis.ifpark.dtos.usuario.UsuarioResponseDTO;
+import com.luis.ifpark.entities.Usuario;
 import com.luis.ifpark.entities.enums.PapelUsuario;
 import com.luis.ifpark.security.JwtUtil;
 import com.luis.ifpark.services.AuthService;
@@ -67,19 +68,21 @@ public class AuthController {
 
     @PostMapping(value = "/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
-        // Autenticar o usuário
-        System.out.println(loginDTO.getEmail() + loginDTO.getSenha());
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getSenha())
-        );
+        var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getSenha());
 
-        // Carregar detalhes do usuário
-        UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getEmail());
-        System.out.println(userDetails);
-        // Gerar token JWT
-        String token = jwtUtil.generateToken(userDetails);
+        var auth = authenticationManager.authenticate(usernamePassword);
 
-        // Retornar resposta com token
-        return ResponseEntity.ok(new LoginResponseDTO(token, expiration));
+        var user = (Usuario) auth.getPrincipal();
+
+
+        String token = jwtUtil.generateToken(user);
+
+        return ResponseEntity.ok(new LoginResponseDTO(
+                token,
+                expiration,
+                user.getEmail(),
+                user.getPapel().toString(),
+                user.getId()
+        ));
     }
 }

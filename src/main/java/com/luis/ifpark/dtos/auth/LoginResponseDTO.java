@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -12,4 +14,7 @@ import lombok.Setter;
 public class LoginResponseDTO {
     private String token;
     private Long expiresIn;
+    private String email;
+    private String role;
+    private UUID id;
 }

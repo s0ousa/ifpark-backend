@@ -51,7 +51,6 @@ public class VeiculoController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('COMUM', 'ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<VeiculoDTO> insert(@Valid @RequestBody VeiculoCreateDTO dto) {
         VeiculoDTO createdDto = veiculoService.insert(dto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
