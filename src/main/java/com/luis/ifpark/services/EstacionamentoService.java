@@ -49,7 +49,9 @@ public class EstacionamentoService {
     }
 
     @Transactional(readOnly = true)
-    public Page<EstacionamentoDTO> findAll(UUID campusId, Pageable pageable) {
+    public Page<EstacionamentoComVagasDTO> findAll(UUID campusId, Pageable pageable) {
+        Page<Estacionamento> pageResult;
+
         if (campusId != null) {
             if (!campusRepository.existsById(campusId)) {
                 throw new ResourceNotFoundException("Campus não encontrado");
@@ -59,22 +61,24 @@ public class EstacionamentoService {
                 throw new SecurityException("Você não tem permissão para acessar os dados deste campus");
             }
 
-            return repository.findByCampusId(campusId, pageable)
-                    .map(EstacionamentoDTO::new);
+            pageResult = repository.findByCampusId(campusId, pageable);
+
+        } else if (SecurityUtils.isSuperAdmin()) {
+            pageResult = repository.findAll(pageable);
+
+        } else {
+            Usuario usuarioLogado = SecurityUtils.getCurrentUser();
+            if (usuarioLogado.getCampus() == null) {
+                throw new RegraDeNegocioException("Usuário não está vinculado a nenhum campus");
+            }
+            pageResult = repository.findByCampusId(usuarioLogado.getCampus().getId(), pageable);
         }
 
-        if (SecurityUtils.isSuperAdmin()) {
-            return repository.findAll(pageable)
-                    .map(EstacionamentoDTO::new);
-        }
 
-        Usuario usuarioLogado = SecurityUtils.getCurrentUser();
-        if (usuarioLogado.getCampus() == null) {
-            throw new RegraDeNegocioException("Usuário não está vinculado a nenhum campus");
-        }
-
-        return repository.findByCampusId(usuarioLogado.getCampus().getId(), pageable)
-                .map(EstacionamentoDTO::new);
+        return pageResult.map(estacionamento -> {
+            long ocupadas = movimentacaoRepository.countByEstacionamentoIdAndDataSaidaIsNull(estacionamento.getId());
+            return new EstacionamentoComVagasDTO(estacionamento, ocupadas);
+        });
     }
 
     @Transactional
