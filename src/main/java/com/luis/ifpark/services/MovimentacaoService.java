@@ -1,6 +1,6 @@
 package com.luis.ifpark.services;
 
-import com.luis.ifpark.dtos.MovimentacaoDTO;
+import com.luis.ifpark.dtos.movimentacao.MovimentacaoDTO;
 import com.luis.ifpark.dtos.movimentacao.EntryRegisterDTO;
 import com.luis.ifpark.dtos.movimentacao.ExitRegisterDTO;
 import com.luis.ifpark.dtos.movimentacao.MovimentacaoResponseDTO;
@@ -53,9 +53,16 @@ public class MovimentacaoService {
     }
 
     @Transactional(readOnly = true)
-    public Page<MovimentacaoDTO> findAll(Pageable pageable) {
-        Page<Movimentacao> result = repository.findAll(pageable);
-        return result.map(movimentacao -> new MovimentacaoDTO(movimentacao));
+    public Page<MovimentacaoDTO> findAll(UUID estacionamentoId, Pageable pageable) {
+        Page<Movimentacao> result;
+
+        if (estacionamentoId != null) {
+            result = repository.findByEstacionamentoId(estacionamentoId, pageable);
+        } else {
+            result = repository.findAll(pageable);
+        }
+
+        return result.map(MovimentacaoDTO::new);
     }
 
     @Transactional(readOnly = true)

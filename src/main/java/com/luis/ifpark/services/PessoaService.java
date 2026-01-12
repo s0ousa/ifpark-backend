@@ -3,12 +3,19 @@ package com.luis.ifpark.services;
 import com.luis.ifpark.dtos.pessoa.PessoaCreateDTO;
 import com.luis.ifpark.dtos.pessoa.PessoaResponseDTO;
 import com.luis.ifpark.dtos.pessoa.PessoaUpdateDTO;
+import com.luis.ifpark.dtos.pessoa.VisitanteDTO;
+import com.luis.ifpark.entities.Endereco;
 import com.luis.ifpark.entities.Pessoa;
+import com.luis.ifpark.entities.Veiculo;
+import com.luis.ifpark.entities.enums.StatusAprovacao;
 import com.luis.ifpark.entities.enums.StatusPessoa;
 import com.luis.ifpark.entities.enums.TipoPessoa;
 import com.luis.ifpark.exceptions.CpfJaCadastradoException;
+import com.luis.ifpark.exceptions.RegraDeNegocioException;
 import com.luis.ifpark.exceptions.ResourceNotFoundException;
+import com.luis.ifpark.repositories.EnderecoRepository;
 import com.luis.ifpark.repositories.PessoaRepository;
+import com.luis.ifpark.repositories.VeiculoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +29,12 @@ public class PessoaService {
 
     @Autowired
     private PessoaRepository pessoaRepository;
+
+    @Autowired
+    private EnderecoRepository enderecoRepository;
+
+    @Autowired
+    private VeiculoRepository veiculoRepository;
 
     @Transactional(readOnly = true)
     public List<PessoaResponseDTO> findAll() {
@@ -66,6 +79,54 @@ public class PessoaService {
 
         Pessoa savedPessoa = pessoaRepository.save(pessoa);
         return toResponseDTO(savedPessoa);
+    }
+
+    @Transactional
+    public PessoaResponseDTO createVisitor(VisitanteDTO dto) {
+        if (pessoaRepository.existsByCpf(dto.getCpf())) {
+            throw new CpfJaCadastradoException("CPF já cadastrado: " + dto.getCpf());
+        }
+
+        if (dto.getTipo() != TipoPessoa.VISITANTE) {
+            throw new RegraDeNegocioException("O tipo deve ser VISITANTE para este endpoint");
+        }
+
+        if (veiculoRepository.existsByPlaca(dto.getPlaca())) {
+            throw new RegraDeNegocioException("Placa já cadastrada: " + dto.getPlaca());
+        }
+
+        Endereco endereco = new Endereco();
+        endereco.setLogradouro(dto.getLogradouro());
+        endereco.setNumero(dto.getNumero());
+        endereco.setComplemento(dto.getComplemento());
+        endereco.setBairro(dto.getBairro());
+        endereco.setCidade(dto.getCidade());
+        endereco.setEstado(dto.getEstado());
+        endereco.setCep(dto.getCep());
+        Endereco savedEndereco = enderecoRepository.save(endereco);
+
+        Pessoa pessoa = new Pessoa();
+        pessoa.setNome(dto.getNome());
+        pessoa.setCpf(dto.getCpf());
+        pessoa.setMatricula(null);
+        pessoa.setTipo(TipoPessoa.VISITANTE);
+        pessoa.setStatus(StatusPessoa.ATIVO);
+        pessoa.setTelefone(dto.getTelefone());
+        pessoa.setEndereco(savedEndereco);
+        pessoa.setUsuario(null);
+
+        Pessoa savedPessoa = pessoaRepository.save(pessoa);
+
+        Veiculo veiculo = new Veiculo();
+        veiculo.setPlaca(dto.getPlaca().toUpperCase());
+        veiculo.setModelo(dto.getModelo());
+        veiculo.setStatusAprovacao(StatusAprovacao.APROVADO);
+        veiculo.setMotivoRejeicao(null);
+        veiculo.setPessoa(savedPessoa);
+
+        veiculoRepository.save(veiculo);
+
+        return new PessoaResponseDTO(savedPessoa);
     }
 
     @Transactional

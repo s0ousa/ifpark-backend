@@ -1,9 +1,6 @@
 package com.luis.ifpark.controllers;
 
-import com.luis.ifpark.dtos.pessoa.PessoaCreateDTO;
-import com.luis.ifpark.dtos.pessoa.PessoaResponseDTO;
-import com.luis.ifpark.dtos.pessoa.PessoaUpdateDTO;
-import com.luis.ifpark.dtos.pessoa.StatusPessoaUpdateDTO;
+import com.luis.ifpark.dtos.pessoa.*;
 import com.luis.ifpark.services.PessoaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +39,17 @@ public class PessoaController {
     public ResponseEntity<PessoaResponseDTO> findByCpf(@PathVariable String cpf) {
         PessoaResponseDTO dto = pessoaService.findByCpf(cpf);
         return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/visitantes")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN')")
+    public ResponseEntity<PessoaResponseDTO> createVisitor(@Valid @RequestBody VisitanteDTO dto) {
+        PessoaResponseDTO createdDto = pessoaService.createVisitor(dto);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(createdDto.getId())
+                .toUri();
+        return ResponseEntity.created(uri).body(createdDto);
     }
 
     @PostMapping

@@ -1,5 +1,6 @@
 package com.luis.ifpark.dtos.usuario;
 
+import com.luis.ifpark.entities.Usuario;
 import com.luis.ifpark.entities.enums.PapelUsuario;
 import com.luis.ifpark.dtos.pessoa.PessoaResponseDTO;
 import com.luis.ifpark.dtos.campus.CampusDTO;
@@ -20,4 +21,12 @@ public class UsuarioResponseDTO {
     private PapelUsuario papel;
     private PessoaResponseDTO pessoa;
     private CampusDTO campus;
+
+    public UsuarioResponseDTO(Usuario entity) {
+        this.id = entity.getId();
+        this.email = entity.getEmail();
+        this.papel = entity.getPapel();
+        this.pessoa = entity.getPessoa() != null ? new PessoaResponseDTO(entity.getPessoa()) : null;
+        this.campus = entity.getCampus() != null ? new CampusDTO(entity.getCampus()) : null;
+    }
 }

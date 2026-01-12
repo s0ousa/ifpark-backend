@@ -1,5 +1,6 @@
 package com.luis.ifpark.dtos.veiculo;
 
+import com.luis.ifpark.dtos.pessoa.PessoaResumoDTO;
 import com.luis.ifpark.dtos.pessoa.PessoaUpdateDTO;
 import com.luis.ifpark.entities.Veiculo;
 import com.luis.ifpark.entities.enums.StatusAprovacao;
@@ -33,7 +34,7 @@ public class VeiculoDTO {
     private String motivoRejeicao;
 
     @NotNull(message = "Pessoa é obrigatória")
-    private PessoaUpdateDTO.PessoaDTO pessoa;
+    private PessoaResumoDTO pessoa;
 
     // Não incluí a lista de movimentações para evitar loops infinitos
     // Esse relacionamento pode ser tratado separadamente se necessário
@@ -44,6 +45,6 @@ public class VeiculoDTO {
         this.modelo = entity.getModelo();
         this.statusAprovacao = entity.getStatusAprovacao();
         this.motivoRejeicao = entity.getMotivoRejeicao();
-        this.pessoa = entity.getPessoa() != null ? new PessoaUpdateDTO.PessoaDTO(entity.getPessoa()) : null;
+        this.pessoa = entity.getPessoa() != null ? new PessoaResumoDTO(entity.getPessoa()) : null;
     }
 }

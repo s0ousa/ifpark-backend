@@ -1,6 +1,6 @@
 package com.luis.ifpark.controllers;
 
-import com.luis.ifpark.dtos.MovimentacaoDTO;
+import com.luis.ifpark.dtos.movimentacao.MovimentacaoDTO;
 import com.luis.ifpark.dtos.movimentacao.EntryRegisterDTO;
 import com.luis.ifpark.dtos.movimentacao.ExitRegisterDTO;
 import com.luis.ifpark.dtos.movimentacao.MovimentacaoResponseDTO;
@@ -36,8 +36,10 @@ public class MovimentacaoController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('VIGIA', 'ADMIN', 'SUPER_ADMIN')")
-    public ResponseEntity<Page<MovimentacaoDTO>> findAll(Pageable pageable) {
-        Page<MovimentacaoDTO> dtoPage = movimentacaoService.findAll(pageable);
+    public ResponseEntity<Page<MovimentacaoDTO>> findAll(
+            @RequestParam(required = false) UUID estacionamentoId,
+            Pageable pageable) {
+        Page<MovimentacaoDTO> dtoPage = movimentacaoService.findAll(estacionamentoId, pageable);
         return ResponseEntity.ok(dtoPage);
     }
 
