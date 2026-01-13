@@ -25,8 +25,8 @@ public class UsuarioController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN')")
-    public ResponseEntity<List<UsuarioResponseDTO>> findAll() {
-        List<UsuarioResponseDTO> list = usuarioService.findAll();
+    public ResponseEntity<List<UsuarioResponseDTO>> findAll(@RequestParam(required = false) String papel) {
+        List<UsuarioResponseDTO> list = usuarioService.findAll(papel);
         return ResponseEntity.ok(list);
     }
 

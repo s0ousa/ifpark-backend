@@ -20,12 +20,15 @@ import com.luis.ifpark.repositories.EnderecoRepository;
 import com.luis.ifpark.repositories.PessoaRepository;
 import com.luis.ifpark.repositories.UsuarioRepository;
 import com.luis.ifpark.utils.SecurityUtils;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -49,24 +52,36 @@ public class UsuarioService {
     private PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
-    public List<UsuarioResponseDTO> findAll() {
-        // Verificar se o usuário é SUPER_ADMIN (pode ver todos os usuários)
-        if (SecurityUtils.isSuperAdmin()) {
-            return usuarioRepository.findAll().stream()
-                    .map(this::toResponseDTO)
-                    .collect(Collectors.toList());
-        }
-        
-        // Usuários comuns e admins só podem ver usuários do mesmo campus
-        Usuario currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser != null && currentUser.getCampus() != null) {
-            return usuarioRepository.findByCampusId(currentUser.getCampus().getId()).stream()
-                    .map(this::toResponseDTO)
-                    .collect(Collectors.toList());
-        }
-        
-        // Se o usuário não tem campus associado, retorna lista vazia
-        return List.of();
+    public List<UsuarioResponseDTO> findAll(String papelStr) {
+
+        Specification<Usuario> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (papelStr != null && !papelStr.isEmpty()) {
+                try {
+                    PapelUsuario papelEnum = PapelUsuario.valueOf(papelStr.toUpperCase());
+                    predicates.add(cb.equal(root.get("papel"), papelEnum));
+                } catch (IllegalArgumentException e) {
+                    predicates.add(cb.disjunction());
+                }
+            }
+
+            if (!SecurityUtils.isSuperAdmin()) {
+                Usuario currentUser = SecurityUtils.getCurrentUser();
+
+                if (currentUser != null && currentUser.getCampus() != null) {
+                    predicates.add(cb.equal(root.get("campus").get("id"), currentUser.getCampus().getId()));
+                } else {
+                    predicates.add(cb.disjunction());
+                }
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return usuarioRepository.findAll(spec).stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -277,6 +292,12 @@ public class UsuarioService {
                 usuario.getPessoa().getStatus(),
                 usuario.getPessoa().getTelefone()
             ));
+
+            if (usuario.getPessoa().getEndereco() != null) {
+                dto.setEndereco(new com.luis.ifpark.dtos.endereco.EnderecoDTO(
+                        usuario.getPessoa().getEndereco()
+                ));
+            }
         }
         
         if (usuario.getCampus() != null) {
