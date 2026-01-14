@@ -45,6 +45,11 @@ public class PessoaService {
     }
 
     @Transactional(readOnly = true)
+    public Page<PessoaResponseDTO> findAll(Pageable pageable) {
+        return pessoaRepository.findAll(pageable).map(this::toResponseDTO);
+    }
+
+    @Transactional(readOnly = true)
     public PessoaResponseDTO findById(UUID id) {
         Pessoa pessoa = pessoaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + id));

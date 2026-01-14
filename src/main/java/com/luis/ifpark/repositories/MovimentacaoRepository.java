@@ -24,6 +24,7 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, UUID
     Page<Movimentacao> findByEstacionamentoId(UUID estacionamentoId, Pageable pageable);
 
     List<Movimentacao> findByEstacionamentoIdAndDataSaidaIsNull(UUID estacionamentoId);
+    Page<Movimentacao> findByEstacionamentoIdAndDataSaidaIsNull(UUID estacionamentoId, Pageable pageable);
 
     boolean existsByVeiculoAndDataSaidaIsNull(Veiculo veiculo);
 

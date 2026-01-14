@@ -6,6 +6,10 @@ import com.luis.ifpark.dtos.veiculo.VeiculoRejectedDTO;
 import com.luis.ifpark.services.VeiculoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -24,9 +28,10 @@ public class VeiculoController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN')")
-    public ResponseEntity<List<VeiculoDTO>> findAll() {
-        List<VeiculoDTO> list = veiculoService.findAll();
-        return ResponseEntity.ok(list);
+    public ResponseEntity<Page<VeiculoDTO>> findAll(
+            @PageableDefault(page = 0, size = 10, sort = "modelo", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<VeiculoDTO> page = veiculoService.findAll(pageable);
+        return ResponseEntity.ok(page);
     }
 
     @GetMapping(value = "/{id}")
@@ -38,16 +43,20 @@ public class VeiculoController {
 
     @GetMapping(value = "/campus/{campusId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN')")
-    public ResponseEntity<List<VeiculoDTO>> findByCampus(@PathVariable UUID campusId) {
-        List<VeiculoDTO> list = veiculoService.findByCampus(campusId);
-        return ResponseEntity.ok(list);
+    public ResponseEntity<Page<VeiculoDTO>> findByCampus(
+            @PathVariable UUID campusId,
+            @PageableDefault(page = 0, size = 10, sort = "modelo", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<VeiculoDTO> page = veiculoService.findByCampus(campusId, pageable);
+        return ResponseEntity.ok(page);
     }
 
     @GetMapping(value = "/pessoa/{pessoaId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN', 'COMUM')")
-    public ResponseEntity<List<VeiculoDTO>> findByPessoaId(@PathVariable UUID pessoaId) {
-        List<VeiculoDTO> list = veiculoService.findByPessoaId(pessoaId);
-        return ResponseEntity.ok(list);
+    public ResponseEntity<Page<VeiculoDTO>> findByPessoaId(
+            @PathVariable UUID pessoaId,
+            @PageableDefault(page = 0, size = 10, sort = "modelo", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<VeiculoDTO> page = veiculoService.findByPessoaId(pessoaId, pageable);
+        return ResponseEntity.ok(page);
     }
 
     @PostMapping

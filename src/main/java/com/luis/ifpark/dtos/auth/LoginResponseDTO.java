@@ -17,4 +17,5 @@ public class LoginResponseDTO {
     private String email;
     private String role;
     private UUID id;
+    private UUID pessoaId;
 }

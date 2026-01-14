@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -26,9 +25,10 @@ public class PessoaController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN')")
-    public ResponseEntity<List<PessoaResponseDTO>> findAll() {
-        List<PessoaResponseDTO> list = pessoaService.findAll();
-        return ResponseEntity.ok(list);
+    public ResponseEntity<Page<PessoaResponseDTO>> findAll(
+            @PageableDefault(page = 0, size = 10, sort = "nome", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<PessoaResponseDTO> page = pessoaService.findAll(pageable);
+        return ResponseEntity.ok(page);
     }
 
     @GetMapping(value = "/{id}")

@@ -82,7 +82,8 @@ public class AuthController {
                 expiration,
                 user.getEmail(),
                 user.getPapel().toString(),
-                user.getId()
+                user.getId(),
+                user.getPessoa().getId()
         ));
     }
 }

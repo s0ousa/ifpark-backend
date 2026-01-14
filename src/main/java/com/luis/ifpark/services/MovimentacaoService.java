@@ -79,6 +79,12 @@ public class MovimentacaoService {
         return result.stream().map(MovimentacaoDTO::new).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public Page<MovimentacaoDTO> findVeiculosNoEstacionamento(UUID estacionamentoId, Pageable pageable) {
+        Page<Movimentacao> result = repository.findByEstacionamentoIdAndDataSaidaIsNull(estacionamentoId, pageable);
+        return result.map(MovimentacaoDTO::new);
+    }
+
     @Transactional
     public MovimentacaoResponseDTO registrarEntrada(EntryRegisterDTO dto) {
         String emailVigia = SecurityContextHolder.getContext().getAuthentication().getName();

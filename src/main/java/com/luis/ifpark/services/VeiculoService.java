@@ -14,6 +14,8 @@ import com.luis.ifpark.utils.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -39,6 +41,11 @@ public class VeiculoService {
     }
 
     @Transactional(readOnly = true)
+    public Page<VeiculoDTO> findAll(Pageable pageable) {
+        return repository.findAll(pageable).map(VeiculoDTO::new);
+    }
+
+    @Transactional(readOnly = true)
     public List<VeiculoDTO> findByCampus(UUID campusId) {
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.hasAccessToCampus(campusId)) {
             throw new org.springframework.security.access.
@@ -47,6 +54,16 @@ public class VeiculoService {
 
         List<Veiculo> list = repository.findByCampusId(campusId);
         return list.stream().map(VeiculoDTO::new).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<VeiculoDTO> findByCampus(UUID campusId, Pageable pageable) {
+        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.hasAccessToCampus(campusId)) {
+            throw new org.springframework.security.access.
+                    AccessDeniedException("Você não tem permissão para visualizar veículos deste campus.");
+        }
+
+        return repository.findByCampusId(campusId, pageable).map(VeiculoDTO::new);
     }
 
     @Transactional(readOnly = true)
@@ -61,6 +78,11 @@ public class VeiculoService {
     public List<VeiculoDTO> findByPessoaId(UUID pessoaId) {
         List<Veiculo> result = repository.findByPessoaId(pessoaId);
         return result.stream().map(VeiculoDTO::new).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<VeiculoDTO> findByPessoaId(UUID pessoaId, Pageable pageable) {
+        return repository.findByPessoaId(pessoaId, pageable).map(VeiculoDTO::new);
     }
 
     @Transactional(readOnly = true)

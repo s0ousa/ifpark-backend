@@ -43,7 +43,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     mensagem = "Conta inativa. Por favor, reative sua conta.";
                     break;
                 case PENDENTE:
-                    mensagem = "Sua conta está pendente de aprovação.";
+                    mensagem = "Sua conta ainda está pendente de aprovação.";
                     break;
                 default:
                     mensagem = "Conta não autorizada para login.";

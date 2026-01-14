@@ -12,6 +12,8 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -52,9 +54,11 @@ public class MovimentacaoController {
 
     @GetMapping(value = "/estacionamento/{estacionamentoId}")
     @PreAuthorize("hasAnyRole('VIGIA', 'ADMIN', 'SUPER_ADMIN')")
-    public ResponseEntity<List<MovimentacaoDTO>> findVeiculosNoEstacionamento(@PathVariable UUID estacionamentoId) {
-        List<MovimentacaoDTO> list = movimentacaoService.findVeiculosNoEstacionamento(estacionamentoId);
-        return ResponseEntity.ok(list);
+    public ResponseEntity<Page<MovimentacaoDTO>> findVeiculosNoEstacionamento(
+            @PathVariable UUID estacionamentoId,
+            @PageableDefault(page = 0, size = 10, sort = "dataEntrada", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<MovimentacaoDTO> page = movimentacaoService.findVeiculosNoEstacionamento(estacionamentoId, pageable);
+        return ResponseEntity.ok(page);
     }
 
     @PostMapping(value = "/entrada")

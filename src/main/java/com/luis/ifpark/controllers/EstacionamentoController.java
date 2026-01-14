@@ -32,7 +32,7 @@ public class EstacionamentoController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA', 'SUPER_ADMIN','COMUM')")
     public ResponseEntity<Page<EstacionamentoComVagasDTO>> findAll(
             @RequestParam(value = "campus", required = false) UUID campusId,
             Pageable pageable) {

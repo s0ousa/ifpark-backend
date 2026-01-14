@@ -22,6 +22,8 @@ import com.luis.ifpark.repositories.UsuarioRepository;
 import com.luis.ifpark.utils.SecurityUtils;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -82,6 +84,37 @@ public class UsuarioService {
         return usuarioRepository.findAll(spec).stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UsuarioResponseDTO> findAll(String papelStr, Pageable pageable) {
+
+        Specification<Usuario> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (papelStr != null && !papelStr.isEmpty()) {
+                try {
+                    PapelUsuario papelEnum = PapelUsuario.valueOf(papelStr.toUpperCase());
+                    predicates.add(cb.equal(root.get("papel"), papelEnum));
+                } catch (IllegalArgumentException e) {
+                    predicates.add(cb.disjunction());
+                }
+            }
+
+            if (!SecurityUtils.isSuperAdmin()) {
+                Usuario currentUser = SecurityUtils.getCurrentUser();
+
+                if (currentUser != null && currentUser.getCampus() != null) {
+                    predicates.add(cb.equal(root.get("campus").get("id"), currentUser.getCampus().getId()));
+                } else {
+                    predicates.add(cb.disjunction());
+                }
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return usuarioRepository.findAll(spec, pageable).map(this::toResponseDTO);
     }
 
     @Transactional(readOnly = true)
