@@ -1,9 +1,7 @@
 package com.luis.ifpark.services;
 
-import com.luis.ifpark.dtos.pessoa.PessoaCreateDTO;
-import com.luis.ifpark.dtos.pessoa.PessoaResponseDTO;
-import com.luis.ifpark.dtos.pessoa.PessoaUpdateDTO;
-import com.luis.ifpark.dtos.pessoa.VisitanteDTO;
+import com.luis.ifpark.dtos.pessoa.*;
+import com.luis.ifpark.dtos.veiculo.VeiculoResumoDTO;
 import com.luis.ifpark.entities.Endereco;
 import com.luis.ifpark.entities.Pessoa;
 import com.luis.ifpark.entities.Veiculo;
@@ -17,6 +15,9 @@ import com.luis.ifpark.repositories.EnderecoRepository;
 import com.luis.ifpark.repositories.PessoaRepository;
 import com.luis.ifpark.repositories.VeiculoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -134,22 +135,39 @@ public class PessoaService {
         Pessoa pessoa = pessoaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + id));
 
-        // Verificar se está tentando mudar o CPF para um que já existe (exceto o próprio)
-        if (!pessoa.getCpf().equals(dto.getCpf()) && pessoaRepository.existsByCpf(dto.getCpf())) {
-            throw new CpfJaCadastradoException("CPF já cadastrado: " + dto.getCpf());
+        if (dto.getNome() != null) {
+            pessoa.setNome(dto.getNome());
         }
 
-        // Validar matrícula para alunos
-        if (dto.getTipo() == TipoPessoa.ALUNO && (dto.getMatricula() == null || dto.getMatricula().isEmpty())) {
-            throw new IllegalArgumentException("Matrícula é obrigatória para alunos");
+        if (dto.getCpf() != null) {
+            if (!pessoa.getCpf().equals(dto.getCpf()) && pessoaRepository.existsByCpf(dto.getCpf())) {
+                throw new CpfJaCadastradoException("CPF já cadastrado: " + dto.getCpf());
+            }
+            pessoa.setCpf(dto.getCpf());
         }
 
-        pessoa.setNome(dto.getNome());
-        pessoa.setCpf(dto.getCpf());
-        pessoa.setMatricula(dto.getMatricula());
-        pessoa.setTipo(dto.getTipo());
-        pessoa.setStatus(dto.getStatus());
-        pessoa.setTelefone(dto.getTelefone());
+        if (dto.getTipo() != null) {
+            pessoa.setTipo(dto.getTipo());
+        }
+
+        if (dto.getMatricula() != null) {
+            pessoa.setMatricula(dto.getMatricula());
+        }
+
+        if (pessoa.getTipo() == TipoPessoa.ALUNO) {
+            boolean matriculaVazia = pessoa.getMatricula() == null || pessoa.getMatricula().isEmpty();
+            if (matriculaVazia) {
+                throw new IllegalArgumentException("Matrícula é obrigatória para alunos");
+            }
+        }
+
+        if (dto.getStatus() != null) {
+            pessoa.setStatus(dto.getStatus());
+        }
+
+        if (dto.getTelefone() != null) {
+            pessoa.setTelefone(dto.getTelefone());
+        }
 
         Pessoa updatedPessoa = pessoaRepository.save(pessoa);
         return toResponseDTO(updatedPessoa);
@@ -176,6 +194,29 @@ public class PessoaService {
         return new PessoaResponseDTO(pessoa);
     }
 
+    @Transactional(readOnly = true)
+    public Page<MotoristaResponseDTO> findAllDrivers(Pageable pageable) {
+        // Passo 1: Buscar a página de IDs
+        Page<UUID> pageIds = pessoaRepository.findIdsMotoristas(pageable);
+
+        if (pageIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // Passo 2: Buscar as entidades completas (com veículos) usando os IDs
+        List<UUID> ids = pageIds.getContent();
+        List<Pessoa> pessoasComVeiculos = pessoaRepository.findPessoasComVeiculosPorIds(ids);
+
+        // Passo 3: Converter para o seu DTO
+        List<MotoristaResponseDTO> dtos = pessoasComVeiculos.stream()
+                .map(this::toMotoristaDTO)
+                .collect(Collectors.toList());
+
+        // Passo 4: Retornar o PageImpl mantendo os metadados da paginação original
+        return new PageImpl<>(dtos, pageable, pageIds.getTotalElements());
+    }
+
+
     private PessoaResponseDTO toResponseDTO(Pessoa pessoa) {
         PessoaResponseDTO dto = new PessoaResponseDTO();
         dto.setId(pessoa.getId());
@@ -186,5 +227,27 @@ public class PessoaService {
         dto.setStatus(pessoa.getStatus());
         dto.setTelefone(pessoa.getTelefone());
         return dto;
+    }
+
+    private MotoristaResponseDTO toMotoristaDTO(Pessoa pessoa) {
+        List<VeiculoResumoDTO> veiculosDTO = pessoa.getVeiculos().stream()
+                .map(v -> new VeiculoResumoDTO(
+                        v.getId(),
+                        v.getPlaca(),
+                        v.getModelo(),
+                        v.getStatusAprovacao()
+                ))
+                .collect(Collectors.toList());
+
+        // Retorna o DTO preenchido
+        return new MotoristaResponseDTO(
+                pessoa.getId(),
+                pessoa.getNome(),
+                pessoa.getCpf(),
+                pessoa.getTipo(),
+                pessoa.getTelefone(),
+                pessoa.getStatus(),
+                veiculosDTO
+        );
     }
 }

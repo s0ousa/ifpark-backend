@@ -18,21 +18,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PessoaUpdateDTO {
-    @NotBlank(message = "Nome é obrigatório")
     @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
     private String nome;
 
     @CPF(message = "CPF deve ser válido")
-    @NotBlank(message = "CPF é obrigatório")
     private String cpf;
 
     @Size(max = 20, message = "Matrícula deve ter no máximo 20 caracteres")
     private String matricula;
-
-    @NotNull(message = "Tipo é obrigatório")
     private TipoPessoa tipo;
 
-    @NotNull(message = "Status é obrigatório")
     private StatusPessoa status;
 
     @Pattern(regexp = "\\(\\d{2}\\) \\d{4,5}-\\d{4}", message = "Telefone deve estar no formato (XX) XXXXX-XXXX")

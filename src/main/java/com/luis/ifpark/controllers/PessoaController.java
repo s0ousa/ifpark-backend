@@ -4,6 +4,10 @@ import com.luis.ifpark.dtos.pessoa.*;
 import com.luis.ifpark.services.PessoaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -64,10 +68,19 @@ public class PessoaController {
     }
 
     @PutMapping(value = "/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','VIGIA','SUPER_ADMIN')")
     public ResponseEntity<PessoaResponseDTO> update(@PathVariable UUID id, @Valid @RequestBody PessoaUpdateDTO dto) {
         PessoaResponseDTO updatedDto = pessoaService.update(id, dto);
         return ResponseEntity.ok(updatedDto);
+    }
+
+    @GetMapping("/motoristas")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'VIGIA')")
+    public ResponseEntity<Page<MotoristaResponseDTO>> listar(
+            @PageableDefault(page = 0, size = 10, sort = "nome", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        Page<MotoristaResponseDTO> resultado = pessoaService.findAllDrivers(pageable);
+        return ResponseEntity.ok(resultado);
     }
 
     @DeleteMapping(value = "/{id}")
