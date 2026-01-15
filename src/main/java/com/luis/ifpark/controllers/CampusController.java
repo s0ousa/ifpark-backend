@@ -2,6 +2,7 @@ package com.luis.ifpark.controllers;
 
 import com.luis.ifpark.dtos.campus.CampusCreateDTO;
 import com.luis.ifpark.dtos.campus.CampusDTO;
+import com.luis.ifpark.dtos.campus.CampusResponseDTO;
 import com.luis.ifpark.dtos.campus.CampusUpdateDTO;
 import com.luis.ifpark.services.CampusService;
 import jakarta.validation.Valid;
@@ -25,14 +26,15 @@ public class CampusController {
 
     @GetMapping(value = "/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'VIGIA','COMUM','SUPER_ADMIN')")
-    public ResponseEntity<CampusDTO> findById(@PathVariable UUID id) {
-        CampusDTO dto = service.findById(id);
+    public ResponseEntity<CampusResponseDTO> findById(@PathVariable UUID id) {
+        CampusResponseDTO dto = service.findById(id);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping
-    public ResponseEntity<Page<CampusDTO>> findAll(Pageable pageable) {
-        Page<CampusDTO> dtoPage = service.findAll(pageable);
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Page<CampusResponseDTO>> findAll(Pageable pageable) {
+        Page<CampusResponseDTO> dtoPage = service.findAll(pageable);
         return ResponseEntity.ok(dtoPage);
     }
 
@@ -49,7 +51,7 @@ public class CampusController {
     }
 
     @PutMapping(value = "/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     public ResponseEntity<CampusDTO> update(@PathVariable UUID id, @Valid @RequestBody CampusUpdateDTO dto) {
         CampusDTO result = service.update(id, dto);
         return ResponseEntity.ok(result);

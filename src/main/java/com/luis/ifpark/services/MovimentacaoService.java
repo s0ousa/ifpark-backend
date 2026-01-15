@@ -53,6 +53,19 @@ public class MovimentacaoService {
     }
 
     @Transactional(readOnly = true)
+    public Page<MovimentacaoDTO> findByUsuario(UUID usuarioId, UUID estacionamentoId, Pageable pageable) {
+        Page<Movimentacao> result;
+
+        if (estacionamentoId != null) {
+            result = repository.findByUsuarioIdAndEstacionamentoId(usuarioId, estacionamentoId, pageable);
+        } else {
+            result = repository.findByUsuarioId(usuarioId, pageable);
+        }
+
+        return result.map(MovimentacaoDTO::new);
+    }
+
+  @Transactional(readOnly = true)
     public Page<MovimentacaoDTO> findAll(UUID estacionamentoId, Pageable pageable) {
         Page<Movimentacao> result;
 
@@ -73,11 +86,6 @@ public class MovimentacaoService {
         return new MovimentacaoDTO(movimentacaoResult);
     }
 
-    @Transactional(readOnly = true)
-    public List<MovimentacaoDTO> findVeiculosNoEstacionamento(UUID estacionamentoId) {
-        List<Movimentacao> result = repository.findByEstacionamentoIdAndDataSaidaIsNull(estacionamentoId);
-        return result.stream().map(MovimentacaoDTO::new).collect(Collectors.toList());
-    }
 
     @Transactional(readOnly = true)
     public Page<MovimentacaoDTO> findVeiculosNoEstacionamento(UUID estacionamentoId, Pageable pageable) {

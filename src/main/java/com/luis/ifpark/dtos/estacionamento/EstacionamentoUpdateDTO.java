@@ -20,5 +20,4 @@ public class EstacionamentoUpdateDTO {
     @Positive(message = "Capacidade total deve ser um número positivo")
     private Integer capacidadeTotal;
 
-    private UUID campusId;
 }

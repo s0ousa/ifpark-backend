@@ -2,28 +2,28 @@ package com.luis.ifpark.dtos.usuario;
 
 import com.luis.ifpark.dtos.pessoa.PessoaResumoDTO;
 import com.luis.ifpark.entities.Usuario;
-import com.luis.ifpark.entities.enums.PapelUsuario;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
-
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-public class VigiaResumoDTO {
-    private UUID id;
-    private PapelUsuario papel;
-    private String nome;
+@AllArgsConstructor
+public class VigiaDTO {
 
-    public VigiaResumoDTO(Usuario entity) {
+    private UUID id;
+    private String email;
+    private String papel;
+    private PessoaResumoDTO pessoa;
+
+    public VigiaDTO(Usuario entity) {
         this.id = entity.getId();
-        this.papel = entity.getPapel();
+        this.email = entity.getEmail();
         if (entity.getPessoa() != null) {
-            this.nome = entity.getPessoa().getNome();
+            this.pessoa = new PessoaResumoDTO(entity.getPessoa());
         }
     }
 }

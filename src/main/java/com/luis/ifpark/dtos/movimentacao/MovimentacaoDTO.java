@@ -1,7 +1,10 @@
 package com.luis.ifpark.dtos.movimentacao;
 
 import com.luis.ifpark.dtos.estacionamento.EstacionamentoDTO;
+import com.luis.ifpark.dtos.usuario.VigiaDTO;
+import com.luis.ifpark.dtos.usuario.VigiaResumoDTO;
 import com.luis.ifpark.dtos.veiculo.VeiculoDTO;
+import com.luis.ifpark.dtos.veiculo.VeiculoResumoDTO;
 import com.luis.ifpark.entities.Movimentacao;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;

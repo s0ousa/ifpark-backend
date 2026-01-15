@@ -52,6 +52,23 @@ public class MovimentacaoController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping("/usuario/{usuarioId}")
+    @PreAuthorize("hasAnyRole('VIGIA','COMUM', 'ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Page<MovimentacaoDTO>> findByUsuario(
+            @PathVariable UUID usuarioId,
+            @RequestParam(required = false) UUID estacionamentoId,
+            Pageable pageable) {
+
+        Page<MovimentacaoDTO> dtoPage = movimentacaoService.findByUsuario(
+                usuarioId,
+                estacionamentoId,
+                pageable
+        );
+
+        return ResponseEntity.ok(dtoPage);
+    }
+
+    // levar esse metodo para controller de veiculos
     @GetMapping(value = "/estacionamento/{estacionamentoId}")
     @PreAuthorize("hasAnyRole('VIGIA', 'ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Page<MovimentacaoDTO>> findVeiculosNoEstacionamento(

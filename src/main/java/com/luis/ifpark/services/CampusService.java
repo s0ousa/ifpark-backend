@@ -2,6 +2,7 @@ package com.luis.ifpark.services;
 
 import com.luis.ifpark.dtos.campus.CampusCreateDTO;
 import com.luis.ifpark.dtos.campus.CampusDTO;
+import com.luis.ifpark.dtos.campus.CampusResponseDTO;
 import com.luis.ifpark.dtos.campus.CampusUpdateDTO;
 import com.luis.ifpark.dtos.endereco.EnderecoDTO;
 import com.luis.ifpark.entities.Campus;
@@ -34,17 +35,14 @@ public class CampusService {
     private EnderecoRepository enderecoRepository;
 
     @Transactional(readOnly = true)
-    public CampusDTO findById(UUID id) {
-        Campus campusResult = repository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Recurso não encontrado")
-        );
-        return new CampusDTO(campusResult);
+    public CampusResponseDTO findById(UUID id) {
+        return repository.findByIdWithStats(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso não encontrado"));
     }
 
     @Transactional(readOnly = true)
-    public Page<CampusDTO> findAll(Pageable pageable) {
-        Page<Campus> result = repository.findAll(pageable);
-        return result.map(campus -> new CampusDTO(campus));
+    public Page<CampusResponseDTO> findAll(Pageable pageable) {
+        return repository.findAllWithStats(pageable);
     }
 
     @Transactional
