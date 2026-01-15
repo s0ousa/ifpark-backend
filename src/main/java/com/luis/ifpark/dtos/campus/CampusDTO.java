@@ -17,6 +17,8 @@ public class CampusDTO {
 
     @NotNull(message = "Endereço é obrigatório")
     private EnderecoDTO endereco;
+    
+    private boolean ativo;
 
     // Para simplificar, não incluí a lista de estacionamentos no DTO
     // Isso evita problemas de serialização e performance
@@ -34,6 +36,7 @@ public class CampusDTO {
         this.id = entity.getId();
         this.nome = entity.getNome();
         this.endereco = entity.getEndereco() != null ? new EnderecoDTO(entity.getEndereco()) : null;
+        this.ativo = entity.getAtivo();
     }
 
     public UUID getId() {

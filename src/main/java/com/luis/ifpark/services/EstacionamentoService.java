@@ -90,6 +90,10 @@ public class EstacionamentoService {
             throw new SecurityException("Você não tem permissão para criar estacionamento neste campus");
         }
 
+        if (!campus.getAtivo()) {
+            throw new RegraDeNegocioException("Não é possível criar estacionamento em um campus inativo");
+        }
+
         Estacionamento entity = new Estacionamento();
         entity.setNome(dto.getNome());
         entity.setCapacidadeTotal(dto.getCapacidadeTotal());
@@ -120,6 +124,23 @@ public class EstacionamentoService {
 
         entity = repository.save(entity);
         return new EstacionamentoDTO(entity);
+    }
+
+    @Transactional
+    public void updateActiveStatus(UUID id, boolean ativo) {
+        Estacionamento entity = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso não encontrado"));
+
+        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.hasAccessToCampus(entity.getCampus().getId())) {
+            throw new SecurityException("Você não tem permissão para alterar o status deste estacionamento");
+        }
+
+        if (ativo && !entity.getCampus().getAtivo()) {
+            throw new RegraDeNegocioException("Não é possível ativar o estacionamento pois o Campus está inativo");
+        }
+
+        entity.setAtivo(ativo);
+        repository.save(entity);
     }
 
     @Transactional(propagation = Propagation.SUPPORTS)

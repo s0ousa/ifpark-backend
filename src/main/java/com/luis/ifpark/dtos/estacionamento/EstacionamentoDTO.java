@@ -29,11 +29,14 @@ public class EstacionamentoDTO {
 
     @NotNull(message = "Campus é obrigatório")
     private CampusResumoDTO campus;
+    
+    private boolean ativo;
 
     public EstacionamentoDTO(Estacionamento entity) {
         this.id = entity.getId();
         this.nome = entity.getNome();
         this.capacidadeTotal = entity.getCapacidadeTotal();
         this.campus = entity.getCampus() != null ? new CampusResumoDTO(entity.getCampus()) : null;
+        this.ativo = entity.getAtivo();
     }
 }

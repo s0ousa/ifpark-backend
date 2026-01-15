@@ -19,12 +19,14 @@ public class EstacionamentoComVagasDTO implements Serializable {
     private Integer vagasOcupadas;
     private Integer vagasLivres;
     private CampusResumoDTO campus;
+    private boolean ativo;
 
     public EstacionamentoComVagasDTO(Estacionamento entity, long vagasOcupadasCount) {
         this.id = entity.getId();
         this.nome = entity.getNome();
         this.capacidadeTotal = entity.getCapacidadeTotal();
         this.vagasOcupadas = (int) vagasOcupadasCount;
+        this.ativo = entity.getAtivo();
 
         this.vagasLivres = this.capacidadeTotal - this.vagasOcupadas;
 

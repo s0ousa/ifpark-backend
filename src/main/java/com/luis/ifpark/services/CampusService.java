@@ -13,6 +13,7 @@ import com.luis.ifpark.exceptions.DatabaseException;
 import com.luis.ifpark.exceptions.ResourceNotFoundException;
 import com.luis.ifpark.repositories.CampusRepository;
 import com.luis.ifpark.repositories.EnderecoRepository;
+import com.luis.ifpark.repositories.EstacionamentoRepository;
 import com.luis.ifpark.utils.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class CampusService {
     
     @Autowired
     private EnderecoRepository enderecoRepository;
+
+    @Autowired
+    private EstacionamentoRepository estacionamentoRepository;
 
     @Transactional(readOnly = true)
     public CampusResponseDTO findById(UUID id) {
@@ -72,6 +76,27 @@ public class CampusService {
             return new CampusDTO(entity);
         } catch (EntityNotFoundException e) {
             throw new ResourceNotFoundException("Recurso não encontrado");
+        }
+    }
+
+
+
+    @Transactional
+    public void updateActiveStatus(UUID id, boolean ativo) {
+        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.hasAccessToCampus(id)) {
+            throw new SecurityException("Você não tem permissão para alterar o status deste campus");
+        }
+
+        Campus entity = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso não encontrado"));
+
+        entity.setAtivo(ativo);
+
+        Campus saved = repository.save(entity);
+        repository.flush(); // Força o Hibernate a executar o UPDATE imediatamente
+
+        if (!ativo) {
+            estacionamentoRepository.deactivateAllByCampusId(id);
         }
     }
 

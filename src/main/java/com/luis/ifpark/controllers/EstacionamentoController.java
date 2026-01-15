@@ -61,6 +61,14 @@ public class EstacionamentoController {
         return ResponseEntity.ok(result);
     }
 
+    @PatchMapping(value = "/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Void> updateStatus(@PathVariable UUID id,
+                                             @RequestParam(name = "ativo") boolean ativo) {
+        service.updateActiveStatus(id, ativo);
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping(value = "/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {

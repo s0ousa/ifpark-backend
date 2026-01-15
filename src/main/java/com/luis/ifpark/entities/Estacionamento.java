@@ -30,6 +30,9 @@ public class Estacionamento {
     @JoinColumn(name = "campus_id", nullable = false)
     private Campus campus;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean ativo = true;
+
     @OneToMany(mappedBy = "estacionamento", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Movimentacao> movimentacoes = new ArrayList<>();
 

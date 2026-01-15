@@ -15,9 +15,11 @@ import java.util.UUID;
 public class CampusResumoDTO {
     private UUID id;
     private String nome;
+    private boolean ativo;
 
     public CampusResumoDTO(Campus entity) {
         this.id = entity.getId();
         this.nome = entity.getNome();
+        this.ativo = entity.getAtivo();
     }
 }

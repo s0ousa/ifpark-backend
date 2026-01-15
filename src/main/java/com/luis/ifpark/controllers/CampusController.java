@@ -57,6 +57,13 @@ public class CampusController {
         return ResponseEntity.ok(result);
     }
 
+    @PatchMapping(value = "/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    public ResponseEntity<Void> updateStatus(@PathVariable UUID id, @RequestParam(name = "ativo") boolean ativo) {
+        service.updateActiveStatus(id, ativo);
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping(value = "/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {

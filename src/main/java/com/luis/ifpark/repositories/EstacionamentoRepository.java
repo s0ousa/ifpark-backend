@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -22,4 +23,9 @@ public interface EstacionamentoRepository extends JpaRepository<Estacionamento, 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM Estacionamento e WHERE e.id = :id")
     Optional<Estacionamento> findByIdWithLock(@Param("id") UUID id);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Estacionamento e SET e.ativo = false WHERE e.campus.id = :campusId")
+    void deactivateAllByCampusId(@Param("campusId") UUID campusId);
+
 }

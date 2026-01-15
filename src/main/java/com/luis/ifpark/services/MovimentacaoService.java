@@ -106,6 +106,10 @@ public class MovimentacaoService {
         Estacionamento estacionamento = estacionamentoRepository.findByIdWithLock(dto.getEstacionamentoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Estacionamento não encontrado."));
 
+        if (!estacionamento.getAtivo()) {
+            throw new RegraDeNegocioException("Não é possível registrar entrada em um estacionamento inativo");
+        }
+
         if (veiculo.getStatusAprovacao() != StatusAprovacao.APROVADO) {
             throw new RegraDeNegocioException("Veículo não aprovado.");
         }

@@ -26,6 +26,8 @@ public class CampusResponseDTO {
 
     @NotNull(message = "Endereço é obrigatório")
     private EnderecoDTO endereco;
+    
+    private boolean ativo;
 
     private Integer totalUsuarios;
     private Integer quantidadeEstacionamentos;
@@ -34,12 +36,13 @@ public class CampusResponseDTO {
     private Integer totalVagasLivres;
 
     // Construtor para DTO Projection (usado pela query JPQL)
-    public CampusResponseDTO(UUID id, String nome, Endereco endereco,
+    public CampusResponseDTO(UUID id, String nome, Endereco endereco, boolean ativo,
                              Long totalUsuarios, Long quantidadeEstacionamentos,
                              Long totalVagas, Long totalVagasOcupadas) {
         this.id = id;
         this.nome = nome;
         this.endereco = endereco != null ? new EnderecoDTO(endereco) : null;
+        this.ativo = ativo;
         this.totalUsuarios = totalUsuarios.intValue();
         this.quantidadeEstacionamentos = quantidadeEstacionamentos.intValue();
         this.totalVagas = totalVagas.intValue();

@@ -162,6 +162,10 @@ public class UsuarioService {
         Campus campus = campusRepository.findById(dto.getCampusId())
                 .orElseThrow(() -> new ResourceNotFoundException("Campus não encontrado"));
 
+        if (!campus.getAtivo()) {
+            throw new RegraDeNegocioException("Não é possível criar usuário em um campus inativo");
+        }
+
         Endereco endereco = new Endereco();
         endereco.setLogradouro(dto.getLogradouro());
         endereco.setNumero(dto.getNumero());

@@ -27,6 +27,9 @@ public class Campus {
     @JoinColumn(name = "endereco_id", nullable = false)
     private Endereco endereco;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean ativo = true;
+
     @OneToMany(mappedBy = "campus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Estacionamento> estacionamentos = new ArrayList<>();
 
