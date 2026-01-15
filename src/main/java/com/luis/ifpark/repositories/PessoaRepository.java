@@ -18,15 +18,25 @@ public interface PessoaRepository extends JpaRepository<Pessoa, UUID> {
     Optional<Pessoa> findByCpf(String cpf);
 
 
-    // VISITANTE ou ROLE_COMUM
     @Query("""
-        SELECT p.id 
+        SELECT DISTINCT p.id, p.nome
         FROM Pessoa p
         LEFT JOIN Usuario u ON u.pessoa.id = p.id
-        WHERE p.tipo = 'VISITANTE' 
-           OR u.papel = 'ROLE_COMUM'
+        LEFT JOIN p.veiculos v
+        WHERE v.id IS NOT NULL
+          AND (p.tipo = 'VISITANTE' OR u.campus.id = :campusId)
+        ORDER BY p.nome
     """)
-    Page<UUID> findIdsMotoristas(Pageable pageable);
+    Page<Object[]> findIdsMotoristasFilteredWithNome(@Param("campusId") UUID campusId, Pageable pageable);
+
+    @Query("""
+        SELECT DISTINCT p.id, p.nome
+        FROM Pessoa p
+        LEFT JOIN p.veiculos v
+        WHERE v.id IS NOT NULL
+        ORDER BY p.nome
+    """)
+    Page<Object[]> findIdsMotoristasSuperAdminWithNome(Pageable pageable);
 
     @Query("""
         SELECT DISTINCT p

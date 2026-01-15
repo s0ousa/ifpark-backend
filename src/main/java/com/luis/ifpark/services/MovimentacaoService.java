@@ -4,11 +4,10 @@ import com.luis.ifpark.dtos.movimentacao.MovimentacaoDTO;
 import com.luis.ifpark.dtos.movimentacao.EntryRegisterDTO;
 import com.luis.ifpark.dtos.movimentacao.ExitRegisterDTO;
 import com.luis.ifpark.dtos.movimentacao.MovimentacaoResponseDTO;
-import com.luis.ifpark.entities.Estacionamento;
-import com.luis.ifpark.entities.Movimentacao;
-import com.luis.ifpark.entities.Usuario;
-import com.luis.ifpark.entities.Veiculo;
+import com.luis.ifpark.entities.*;
+import com.luis.ifpark.entities.enums.PapelUsuario;
 import com.luis.ifpark.entities.enums.StatusAprovacao;
+import com.luis.ifpark.entities.enums.TipoPessoa;
 import com.luis.ifpark.exceptions.DatabaseException;
 import com.luis.ifpark.exceptions.RegraDeNegocioException;
 import com.luis.ifpark.exceptions.ResourceNotFoundException;
@@ -110,6 +109,9 @@ public class MovimentacaoService {
             throw new RegraDeNegocioException("Não é possível registrar entrada em um estacionamento inativo");
         }
 
+        validarAcessoPorteiroCampus(vigia, estacionamento);
+        validarVeiculoCampusOuVisitante(veiculo, estacionamento);
+
         if (veiculo.getStatusAprovacao() != StatusAprovacao.APROVADO) {
             throw new RegraDeNegocioException("Veículo não aprovado.");
         }
@@ -143,10 +145,52 @@ public class MovimentacaoService {
         Movimentacao mov = repository.findFirstByVeiculoAndDataSaidaIsNull(veiculo)
                 .orElseThrow(() -> new RegraDeNegocioException("Veículo não está estacionado."));
 
+        Estacionamento estacionamento = mov.getEstacionamento();
+
+        validarAcessoPorteiroCampus(vigia, estacionamento);
+        validarVeiculoCampusOuVisitante(veiculo, estacionamento);
+
         mov.setDataSaida(LocalDateTime.now());
         mov.setVigiaSaida(vigia);
 
         return converterParaDTO(repository.save(mov));
+    }
+
+    private void validarAcessoPorteiroCampus(Usuario vigia, Estacionamento estacionamento) {
+        if (vigia.getPapel() == PapelUsuario.ROLE_SUPER_ADMIN) {
+            return;
+        }
+
+        if (vigia.getCampus() == null || estacionamento.getCampus() == null) {
+            throw new RegraDeNegocioException("Porteiro ou estacionamento sem campus associado");
+        }
+
+        if (!vigia.getCampus().getId().equals(estacionamento.getCampus().getId())) {
+            throw new RegraDeNegocioException("Você não tem permissão para registrar movimentação neste estacionamento");
+        }
+    }
+
+    private void validarVeiculoCampusOuVisitante(Veiculo veiculo, Estacionamento estacionamento) {
+        Pessoa proprietario = veiculo.getPessoa();
+        if (proprietario == null) {
+            throw new RegraDeNegocioException("Veículo sem proprietário cadastrado");
+        }
+
+        if (proprietario.getTipo() == TipoPessoa.VISITANTE) {
+            return;
+        }
+        Usuario usuarioProprietario = proprietario.getUsuario();
+        if (usuarioProprietario == null) {
+            throw new RegraDeNegocioException("Proprietário do veículo não possui cadastro de usuário");
+        }
+
+        if (usuarioProprietario.getCampus() == null || estacionamento.getCampus() == null) {
+            throw new RegraDeNegocioException("Usuário ou estacionamento sem campus associado");
+        }
+
+        if (!usuarioProprietario.getCampus().getId().equals(estacionamento.getCampus().getId())) {
+            throw new RegraDeNegocioException("Veículo pertence a um usuário de outro campus");
+        }
     }
 
     private MovimentacaoResponseDTO converterParaDTO(Movimentacao m) {

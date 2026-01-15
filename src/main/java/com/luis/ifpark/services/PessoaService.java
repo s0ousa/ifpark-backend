@@ -201,24 +201,39 @@ public class PessoaService {
 
     @Transactional(readOnly = true)
     public Page<MotoristaResponseDTO> findAllDrivers(Pageable pageable) {
-        // Passo 1: Buscar a página de IDs
-        Page<UUID> pageIds = pessoaRepository.findIdsMotoristas(pageable);
+        Page<Object[]> pageResults;
+        
+        // SUPER_ADMIN vê todos os motoristas
+        if (com.luis.ifpark.utils.SecurityUtils.isSuperAdmin()) {
+            pageResults = pessoaRepository.findIdsMotoristasSuperAdminWithNome(pageable);
+        } else {
+            // Outros usuários veem apenas motoristas do seu campus + visitantes
+            com.luis.ifpark.entities.Usuario currentUser = com.luis.ifpark.utils.SecurityUtils.getCurrentUser();
+            if (currentUser == null || currentUser.getCampus() == null) {
+                throw new RegraDeNegocioException("Usuário sem campus associado");
+            }
+            pageResults = pessoaRepository.findIdsMotoristasFilteredWithNome(
+                currentUser.getCampus().getId(), 
+                pageable
+            );
+        }
 
-        if (pageIds.isEmpty()) {
+        if (pageResults.isEmpty()) {
             return Page.empty(pageable);
         }
 
-        // Passo 2: Buscar as entidades completas (com veículos) usando os IDs
-        List<UUID> ids = pageIds.getContent();
+        // Extrair apenas os IDs (primeira coluna do Object[])
+        List<UUID> ids = pageResults.getContent().stream()
+                .map(row -> (UUID) row[0])
+                .collect(Collectors.toList());
+        
         List<Pessoa> pessoasComVeiculos = pessoaRepository.findPessoasComVeiculosPorIds(ids);
 
-        // Passo 3: Converter para o seu DTO
         List<MotoristaResponseDTO> dtos = pessoasComVeiculos.stream()
                 .map(this::toMotoristaDTO)
                 .collect(Collectors.toList());
 
-        // Passo 4: Retornar o PageImpl mantendo os metadados da paginação original
-        return new PageImpl<>(dtos, pageable, pageIds.getTotalElements());
+        return new PageImpl<>(dtos, pageable, pageResults.getTotalElements());
     }
 
 
