@@ -41,6 +41,21 @@ public interface CampusRepository extends JpaRepository<Campus, UUID> {
             (SELECT COALESCE(SUM(e.capacidadeTotal), 0) FROM Estacionamento e WHERE e.campus.id = c.id),
             (SELECT COUNT(m) FROM Movimentacao m WHERE m.estacionamento.campus.id = c.id AND m.dataSaida IS NULL)
         )
+        FROM Campus c WHERE c.ativo = true
+        """)
+    Page<CampusResponseDTO> findAllActiveWithStats(Pageable pageable);
+
+    @Query("""
+        SELECT new com.luis.ifpark.dtos.campus.CampusResponseDTO(
+            c.id, 
+            c.nome, 
+            c.endereco,
+            c.ativo,
+            (SELECT COUNT(u) FROM Usuario u WHERE u.campus.id = c.id),
+            (SELECT COUNT(e) FROM Estacionamento e WHERE e.campus.id = c.id),
+            (SELECT COALESCE(SUM(e.capacidadeTotal), 0) FROM Estacionamento e WHERE e.campus.id = c.id),
+            (SELECT COUNT(m) FROM Movimentacao m WHERE m.estacionamento.campus.id = c.id AND m.dataSaida IS NULL)
+        )
         FROM Campus c WHERE c.id = :id
         """)
     Optional<CampusResponseDTO> findByIdWithStats(@Param("id") UUID id);

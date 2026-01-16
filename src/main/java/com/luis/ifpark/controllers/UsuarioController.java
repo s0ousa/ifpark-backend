@@ -67,6 +67,13 @@ public class UsuarioController {
         return ResponseEntity.ok(updatedDto);
     }
 
+    @PutMapping(value = "/{id}/change-password")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Void> changePassword(@PathVariable UUID id, @Valid @RequestBody com.luis.ifpark.dtos.usuario.ChangePasswordDTO dto) {
+        usuarioService.changePassword(id, dto.getNovaSenha());
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping(value = "/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {

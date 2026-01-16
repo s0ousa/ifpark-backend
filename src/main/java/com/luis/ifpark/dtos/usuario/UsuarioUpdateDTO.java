@@ -1,11 +1,10 @@
 package com.luis.ifpark.dtos.usuario;
 
-import com.luis.ifpark.dtos.pessoa.PessoaUpdateDTO;
 import com.luis.ifpark.entities.Usuario;
 import com.luis.ifpark.entities.enums.PapelUsuario;
+import com.luis.ifpark.entities.enums.StatusPessoa;
+import com.luis.ifpark.entities.enums.TipoPessoa;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -16,49 +15,55 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UsuarioUpdateDTO {
+    
+    // Dados de Usuário (opcionais)
     @Email(message = "Email deve ser válido")
-    @NotBlank(message = "Email é obrigatório")
     @Size(min = 5, max = 100, message = "Email deve ter entre 5 e 100 caracteres")
     private String email;
 
-    @NotBlank(message = "Senha é obrigatória")
+    private PapelUsuario papel;
+    
     @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
     private String senha;
-
-    @NotNull(message = "Papel é obrigatório")
-    private PapelUsuario papel;
     
     private UUID campusId;
 
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class UsuarioDTO {
-        private UUID id;
+    // Dados de Pessoa (opcionais)
+    @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
+    private String nome;
 
-        @Email(message = "Email deve ser válido")
-        @NotBlank(message = "Email é obrigatório")
-        @Size(min = 5, max = 100, message = "Email deve ter entre 5 e 100 caracteres")
-        private String email;
+    @Size(min = 14, max = 14, message = "CPF deve ter 14 caracteres")
+    private String cpf;
 
-        @NotBlank(message = "Senha é obrigatória")
-        @Size(min = 6, max = 100, message = "Senha deve ter entre 6 e 100 caracteres")
-        private String senha;
+    @Size(max = 20, message = "Matrícula deve ter no máximo 20 caracteres")
+    private String matricula;
 
-        @NotNull(message = "Papel é obrigatório")
-        private PapelUsuario papel;
+    private TipoPessoa tipo;
 
-        @NotNull(message = "Pessoa é obrigatória")
-        private PessoaUpdateDTO.PessoaDTO pessoa;
+    private StatusPessoa status;
 
-        public UsuarioDTO(Usuario entity) {
-            this.id = entity.getId();
-            this.email = entity.getEmail();
-            this.senha = entity.getSenha();
-            this.papel = entity.getPapel();
-            this.pessoa = entity.getPessoa() != null ? new PessoaUpdateDTO.PessoaDTO(entity.getPessoa()) : null;
-        }
-    }
+    @Size(max = 15, message = "Telefone deve ter no máximo 15 caracteres")
+    private String telefone;
+
+    // Dados de Endereço (opcionais)
+    @Size(max = 100, message = "Logradouro deve ter no máximo 100 caracteres")
+    private String logradouro;
+
+    @Size(max = 10, message = "Número deve ter no máximo 10 caracteres")
+    private String numero;
+
+    @Size(max = 50, message = "Complemento deve ter no máximo 50 caracteres")
+    private String complemento;
+
+    @Size(max = 50, message = "Bairro deve ter no máximo 50 caracteres")
+    private String bairro;
+
+    @Size(max = 50, message = "Cidade deve ter no máximo 50 caracteres")
+    private String cidade;
+
+    @Size(min = 2, max = 2, message = "Estado deve ter 2 caracteres")
+    private String estado;
+
+    @Size(min = 9, max = 9, message = "CEP deve ter 9 caracteres")
+    private String cep;
 }

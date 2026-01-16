@@ -31,6 +31,12 @@ public class CampusController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping(value = "/ativos")
+    public ResponseEntity<Page<CampusResponseDTO>> findAllActive(Pageable pageable) {
+        Page<CampusResponseDTO> dtoPage = service.findAllActive(pageable);
+        return ResponseEntity.ok(dtoPage);
+    }
+
     @GetMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Page<CampusResponseDTO>> findAll(Pageable pageable) {

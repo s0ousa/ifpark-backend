@@ -49,6 +49,11 @@ public class CampusService {
         return repository.findAllWithStats(pageable);
     }
 
+    @Transactional(readOnly = true)
+    public Page<CampusResponseDTO> findAllActive(Pageable pageable) {
+        return repository.findAllActiveWithStats(pageable);
+    }
+
     @Transactional
     public CampusDTO insert(CampusCreateDTO dto) {
         // Verificar se o usuário é SUPER_ADMIN (único que pode criar campus)

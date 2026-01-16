@@ -210,24 +210,146 @@ public class UsuarioService {
         // Verificar permissões de acesso
         checkUserAccessPermission(usuario);
 
-        // Verificar se está tentando mudar o email para um que já existe (exceto o próprio)
-        if (!usuario.getEmail().equals(dto.getEmail()) && usuarioRepository.existsByEmail(dto.getEmail())) {
-            throw new EmailJaCadastradoException("Email já cadastrado: " + dto.getEmail());
+        // Atualizar dados do usuário
+        if (dto.getEmail() != null && !dto.getEmail().isEmpty()) {
+            // Verificar se está tentando mudar o email para um que já existe (exceto o próprio)
+            if (!usuario.getEmail().equals(dto.getEmail()) && usuarioRepository.existsByEmail(dto.getEmail())) {
+                throw new EmailJaCadastradoException("Email já cadastrado: " + dto.getEmail());
+            }
+            usuario.setEmail(dto.getEmail());
         }
 
-        usuario.setEmail(dto.getEmail());
-        usuario.setSenha(passwordEncoder.encode(dto.getSenha())); // Codificar a nova senha
-        usuario.setPapel(dto.getPapel());
+        if (dto.getPapel() != null) {
+            // ADMIN não pode promover usuários a SUPER_ADMIN
+            if (!SecurityUtils.isSuperAdmin() && dto.getPapel() == PapelUsuario.ROLE_SUPER_ADMIN) {
+                throw new AccessDeniedException("Acesso negado: Você não pode promover usuários a SUPER_ADMIN");
+            }
+            usuario.setPapel(dto.getPapel());
+        }
+
+        // Atualizar senha se fornecida
+        if (dto.getSenha() != null && !dto.getSenha().isEmpty()) {
+            usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
+        }
         
-        // Atualizar campus se fornecido
+        // Atualizar campus se fornecido (apenas SUPER_ADMIN pode alterar)
         if (dto.getCampusId() != null) {
+            if (!SecurityUtils.isSuperAdmin()) {
+                throw new AccessDeniedException("Acesso negado: Apenas SUPER_ADMIN pode alterar o campus do usuário");
+            }
             Campus campus = campusRepository.findById(dto.getCampusId())
                 .orElseThrow(() -> new ResourceNotFoundException("Campus não encontrado com ID: " + dto.getCampusId()));
             usuario.setCampus(campus);
         }
 
+        // Atualizar dados da pessoa
+        if (usuario.getPessoa() != null) {
+            Pessoa pessoa = usuario.getPessoa();
+            boolean pessoaUpdated = false;
+
+            if (dto.getNome() != null && !dto.getNome().isEmpty()) {
+                pessoa.setNome(dto.getNome());
+                pessoaUpdated = true;
+            }
+
+            if (dto.getCpf() != null && !dto.getCpf().isEmpty()) {
+                // Verificar se o CPF já existe (exceto para a própria pessoa)
+                if (!pessoa.getCpf().equals(dto.getCpf()) && pessoaRepository.existsByCpf(dto.getCpf())) {
+                    throw new CpfJaCadastradoException("CPF já cadastrado: " + dto.getCpf());
+                }
+                pessoa.setCpf(dto.getCpf());
+                pessoaUpdated = true;
+            }
+
+            if (dto.getMatricula() != null) {
+                pessoa.setMatricula(dto.getMatricula());
+                pessoaUpdated = true;
+            }
+
+            if (dto.getTipo() != null) {
+                // Validar matrícula obrigatória para alunos
+                if (dto.getTipo() == TipoPessoa.ALUNO && (pessoa.getMatricula() == null || pessoa.getMatricula().isEmpty())) {
+                    throw new RegraDeNegocioException("Matrícula é obrigatória para alunos");
+                }
+                pessoa.setTipo(dto.getTipo());
+                pessoaUpdated = true;
+            }
+
+            if (dto.getStatus() != null) {
+                pessoa.setStatus(dto.getStatus());
+                pessoaUpdated = true;
+            }
+
+            if (dto.getTelefone() != null) {
+                pessoa.setTelefone(dto.getTelefone());
+                pessoaUpdated = true;
+            }
+
+            if (pessoaUpdated) {
+                pessoaRepository.save(pessoa);
+            }
+
+            // Atualizar endereço
+            if (pessoa.getEndereco() != null) {
+                Endereco endereco = pessoa.getEndereco();
+                boolean enderecoUpdated = false;
+
+                if (dto.getLogradouro() != null) {
+                    endereco.setLogradouro(dto.getLogradouro());
+                    enderecoUpdated = true;
+                }
+
+                if (dto.getNumero() != null) {
+                    endereco.setNumero(dto.getNumero());
+                    enderecoUpdated = true;
+                }
+
+                if (dto.getComplemento() != null) {
+                    endereco.setComplemento(dto.getComplemento());
+                    enderecoUpdated = true;
+                }
+
+                if (dto.getBairro() != null) {
+                    endereco.setBairro(dto.getBairro());
+                    enderecoUpdated = true;
+                }
+
+                if (dto.getCidade() != null) {
+                    endereco.setCidade(dto.getCidade());
+                    enderecoUpdated = true;
+                }
+
+                if (dto.getEstado() != null) {
+                    endereco.setEstado(dto.getEstado());
+                    enderecoUpdated = true;
+                }
+
+                if (dto.getCep() != null) {
+                    endereco.setCep(dto.getCep());
+                    enderecoUpdated = true;
+                }
+
+                if (enderecoUpdated) {
+                    enderecoRepository.save(endereco);
+                }
+            }
+        }
+
         Usuario updatedUsuario = usuarioRepository.save(usuario);
         return toResponseDTO(updatedUsuario);
+    }
+
+    @Transactional
+    public void changePassword(UUID id, String novaSenha) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com ID: " + id));
+        
+        // Verificar permissões de acesso
+        checkUserAccessPermission(usuario);
+
+        // Atualizar senha
+        usuario.setSenha(passwordEncoder.encode(novaSenha));
+        usuarioRepository.save(usuario);
     }
 
     @Transactional

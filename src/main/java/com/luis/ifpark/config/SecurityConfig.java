@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/veiculos").permitAll()
                         .requestMatchers(HttpMethod.GET, "/campus").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/campus/ativos").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         // Endpoint do Swagger (opcional, mas útil se você usar)
